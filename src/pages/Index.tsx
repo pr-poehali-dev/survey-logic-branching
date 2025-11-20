@@ -690,13 +690,9 @@ const Index = () => {
     >
       <div className="w-full max-w-2xl">
         <div className="flex justify-between items-center mb-8 animate-fade-in">
-          <Input
-            value={surveyTitle}
-            onChange={(e) => setSurveyTitle(e.target.value)}
-            className="font-heading font-bold text-xl border-0 focus-visible:ring-0 px-0"
-            style={{ color: textColor }}
-            placeholder="Название опроса"
-          />
+          <h1 className="font-heading font-bold text-xl" style={{ color: textColor }}>
+            {surveyTitle}
+          </h1>
           <Sheet open={isSettingsOpen} onOpenChange={setIsSettingsOpen}>
             <SheetTrigger asChild>
               <Button variant="outline" size="icon" className="rounded-full">
