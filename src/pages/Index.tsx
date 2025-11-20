@@ -3,6 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import Icon from '@/components/ui/icon';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
@@ -67,6 +68,7 @@ const Index = () => {
   const [primaryBtnColor, setPrimaryBtnColor] = useState('#3b82f6');
   const [secondaryBtnColor, setSecondaryBtnColor] = useState('#ffffff');
   const [textColor, setTextColor] = useState('#0f172a');
+  const [showExportDialog, setShowExportDialog] = useState(false);
 
   useEffect(() => {
     const saved = localStorage.getItem('surveyQuestions');
@@ -231,7 +233,7 @@ const Index = () => {
     toast.success('Опрос экспортирован');
   };
 
-  const handleExportHTML = () => {
+  const handleExportHTML = (withSettings: boolean = false) => {
     const htmlContent = `<!DOCTYPE html>
 <html lang="ru">
 <head>
@@ -381,7 +383,7 @@ const Index = () => {
     </div>
 
     <script>
-        const questions = ${JSON.stringify(questions)};
+        let questions = ${JSON.stringify(questions)};
         
         let currentQuestionId = questions.length > 0 ? questions[0].id : null;
         let finalMessage = '';
@@ -458,13 +460,111 @@ const Index = () => {
 </body>
 </html>`;
 
-    const blob = new Blob([htmlContent], { type: 'text/html' });
+    const htmlWithSettings = withSettings ? htmlContent.replace(
+      '<div class="header">\n            <h1>Опрос</h1>\n        </div>',
+      `<div class="header">
+            <h1>Опрос</h1>
+            <button class="btn-settings" onclick="toggleSettings()" style="padding: 8px 12px; background: rgba(255,255,255,0.9); border: 1px solid #e2e8f0; border-radius: 8px; cursor: pointer;">⚙️</button>
+        </div>
+        <div id="settings" style="display:none; background: white; padding: 20px; border-radius: 8px; margin-bottom: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+            <h3 style="margin-bottom: 15px;">Настройки опроса</h3>
+            <div style="margin-bottom: 10px;">
+                <label>Текст вопроса:</label>
+                <textarea id="edit-text" style="width: 100%; padding: 8px; margin-top: 5px; border: 1px solid #e2e8f0; border-radius: 4px;" rows="3"></textarea>
+            </div>
+            <button onclick="saveQuestion()" style="padding: 8px 16px; background: ${primaryBtnColor}; color: white; border: none; border-radius: 4px; cursor: pointer;">Сохранить</button>
+            <button onclick="addQuestion()" style="padding: 8px 16px; background: #10b981; color: white; border: none; border-radius: 4px; cursor: pointer; margin-left: 8px;">Добавить вопрос</button>
+            <button onclick="exportData()" style="padding: 8px 16px; background: #6366f1; color: white; border: none; border-radius: 4px; cursor: pointer; margin-left: 8px;">Экспорт JSON</button>
+            <div id="questions-list" style="margin-top: 20px;"></div>
+        </div>`
+    ).replace(
+      'render();',
+      `function toggleSettings() {
+            const settings = document.getElementById('settings');
+            settings.style.display = settings.style.display === 'none' ? 'block' : 'none';
+            if (settings.style.display === 'block') renderQuestionsList();
+        }
+        
+        function renderQuestionsList() {
+            const list = document.getElementById('questions-list');
+            list.innerHTML = '<h4>Все вопросы:</h4>' + questions.map((q, i) => 
+                \`<div style="padding: 10px; margin: 5px 0; border: 1px solid #e2e8f0; border-radius: 4px;">
+                    <strong>\${i + 1}.</strong> \${q.text.substring(0, 50)}...
+                    <button onclick="editQuestion('\${q.id}')" style="margin-left: 10px; padding: 4px 8px;">✏️</button>
+                    <button onclick="deleteQuestion('\${q.id}')" style="padding: 4px 8px; color: red;">🗑️</button>
+                </div>\`
+            ).join('');
+        }
+        
+        function editQuestion(id) {
+            const q = questions.find(x => x.id === id);
+            if (q) {
+                document.getElementById('edit-text').value = q.text;
+                window.editingId = id;
+            }
+        }
+        
+        function saveQuestion() {
+            const text = document.getElementById('edit-text').value;
+            if (!text.trim()) return alert('Введите текст вопроса');
+            
+            if (window.editingId) {
+                questions = questions.map(q => q.id === window.editingId ? {...q, text} : q);
+                window.editingId = null;
+            }
+            document.getElementById('edit-text').value = '';
+            renderQuestionsList();
+            render();
+        }
+        
+        function addQuestion() {
+            const text = document.getElementById('edit-text').value;
+            if (!text.trim()) return alert('Введите текст вопроса');
+            
+            questions.push({
+                id: Date.now().toString(),
+                text,
+                yesNextId: null,
+                noNextId: null,
+                yesMessage: '',
+                noMessage: '',
+                textAlign: 'center',
+                yesMessageAlign: 'center',
+                noMessageAlign: 'center'
+            });
+            document.getElementById('edit-text').value = '';
+            renderQuestionsList();
+        }
+        
+        function deleteQuestion(id) {
+            if (confirm('Удалить вопрос?')) {
+                questions = questions.filter(q => q.id !== id);
+                renderQuestionsList();
+                if (currentQuestionId === id) restart();
+            }
+        }
+        
+        function exportData() {
+            const data = JSON.stringify(questions, null, 2);
+            const blob = new Blob([data], {type: 'application/json'});
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'questions.json';
+            a.click();
+        }
+        
+        render();`
+    ) : htmlContent;
+
+    const blob = new Blob([htmlWithSettings], { type: 'text/html' });
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
-    link.download = `survey-${Date.now()}.html`;
+    link.download = `survey-${withSettings ? 'editable-' : ''}${Date.now()}.html`;
     link.click();
     URL.revokeObjectURL(url);
+    setShowExportDialog(false);
     toast.success('HTML файл экспортирован');
   };
 
@@ -683,7 +783,7 @@ const Index = () => {
                     <Button 
                       variant="outline" 
                       className="w-full"
-                      onClick={handleExportHTML}
+                      onClick={() => setShowExportDialog(true)}
                     >
                       <Icon name="FileCode" size={16} className="mr-2" />
                       HTML
@@ -876,6 +976,43 @@ const Index = () => {
           )}
         </Card>
       </div>
+
+      <Dialog open={showExportDialog} onOpenChange={setShowExportDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Экспорт в HTML</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <p className="text-sm text-muted-foreground">
+              Выберите вариант экспорта:
+            </p>
+            <div className="space-y-3">
+              <Button 
+                className="w-full justify-start" 
+                variant="outline"
+                onClick={() => handleExportHTML(false)}
+              >
+                <Icon name="FileCode" size={16} className="mr-2" />
+                <div className="text-left">
+                  <div className="font-semibold">Простой HTML</div>
+                  <div className="text-xs text-muted-foreground">Маленький файл, только просмотр</div>
+                </div>
+              </Button>
+              <Button 
+                className="w-full justify-start" 
+                variant="outline"
+                onClick={() => handleExportHTML(true)}
+              >
+                <Icon name="Settings" size={16} className="mr-2" />
+                <div className="text-left">
+                  <div className="font-semibold">HTML с редактором</div>
+                  <div className="text-xs text-muted-foreground">Большой файл, можно редактировать вопросы</div>
+                </div>
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
