@@ -160,6 +160,16 @@ const Index = () => {
     setNewNoMessage('');
   };
 
+  const handleResetToDefault = () => {
+    if (confirm('Вы уверены? Все текущие вопросы будут удалены.')) {
+      setQuestions(defaultQuestions);
+      localStorage.setItem('surveyQuestions', JSON.stringify(defaultQuestions));
+      setCurrentQuestionId(defaultQuestions[0].id);
+      setFinalMessage('');
+      toast.success('Вопросы сброшены к настройкам по умолчанию');
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 flex items-center justify-center p-4">
       <div className="w-full max-w-2xl">
@@ -294,6 +304,17 @@ const Index = () => {
                       </Card>
                     ))}
                   </div>
+                </div>
+
+                <div className="border-t pt-4">
+                  <Button 
+                    variant="destructive" 
+                    className="w-full"
+                    onClick={handleResetToDefault}
+                  >
+                    <Icon name="RotateCcw" size={16} className="mr-2" />
+                    Сбросить к настройкам по умолчанию
+                  </Button>
                 </div>
               </div>
             </SheetContent>
