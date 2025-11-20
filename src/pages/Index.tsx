@@ -111,12 +111,14 @@ const Index = () => {
     if (nextId) {
       setCurrentQuestionId(nextId);
       setFinalMessage('');
-    } else if (message) {
-      setFinalMessage(message);
-      setFinalMessageAlign(messageAlign || 'center');
-      setCurrentQuestionId(null);
     } else {
-      setFinalMessage('Спасибо за прохождение опроса!');
+      if (message) {
+        setFinalMessage(message);
+        setFinalMessageAlign(messageAlign || 'center');
+      } else {
+        setFinalMessage('Спасибо за прохождение опроса!');
+        setFinalMessageAlign('center');
+      }
       setCurrentQuestionId(null);
     }
   };
@@ -413,17 +415,30 @@ const Index = () => {
                     .replace(/\\*\\*(.*?)\\*\\*/g, '<strong>$1</strong>')
                     .replace(/__(.*?)__/g, '<u>$1</u>')
                     .replace(/\\*(.*?)\\*/g, '<em>$1</em>');
-                app.innerHTML = \`
-                    <div class="question-container">
-                        <div class="text-\${align}">
-                            <div class="question-text">\${formattedText}</div>
+                
+                if (!currentQuestion.yesNextId && !currentQuestion.noNextId) {
+                    app.innerHTML = \`
+                        <div class="final-message">
+                            <div class="icon-check">✓</div>
+                            <div class="text-\${align}">
+                                <div class="message-text">\${formattedText}</div>
+                            </div>
+                            <button class="btn-secondary" onclick="restart()">Пройти заново</button>
                         </div>
-                        <div class="buttons">
-                            <button class="btn-primary" onclick="handleAnswer('yes')">Да</button>
-                            <button class="btn-secondary" onclick="handleAnswer('no')">Нет</button>
+                    \`;
+                } else {
+                    app.innerHTML = \`
+                        <div class="question-container">
+                            <div class="text-\${align}">
+                                <div class="question-text">\${formattedText}</div>
+                            </div>
+                            <div class="buttons">
+                                <button class="btn-primary" onclick="handleAnswer('yes')">Да</button>
+                                <button class="btn-secondary" onclick="handleAnswer('no')">Нет</button>
+                            </div>
                         </div>
-                    </div>
-                \`;
+                    \`;
+                }
             } else if (finalMessage) {
                 const formattedMessage = finalMessage
                     .replace(/\\*\\*(.*?)\\*\\*/g, '<strong>$1</strong>')
@@ -1021,35 +1036,57 @@ const Index = () => {
 
         <Card className="p-8 md:p-12 shadow-xl animate-slide-up" style={{ backgroundColor: cardBgColor }}>
           {currentQuestion ? (
-            <div className="space-y-8">
-              <div className={currentQuestion.textAlign === 'left' ? 'text-left' : 'text-center'}>
-                <h2 
-                  className="font-heading font-semibold leading-relaxed whitespace-pre-wrap text-2xl" 
-                  style={{ color: textColor, fontFamily, fontSize: `${fontSize}px` }}
-                  dangerouslySetInnerHTML={{ __html: formatText(currentQuestion.text) }}
-                />
+            !currentQuestion.yesNextId && !currentQuestion.noNextId ? (
+              <div className="space-y-6 animate-fade-in">
+                <div className="flex justify-center">
+                  <div className="w-16 h-16 rounded-full flex items-center justify-center" style={{ backgroundColor: `${primaryBtnColor}1a` }}>
+                    <Icon name="Check" size={32} style={{ color: primaryBtnColor }} />
+                  </div>
+                </div>
+                <div className={currentQuestion.textAlign === 'left' ? 'text-left' : 'text-center'}>
+                  <p 
+                    className="font-heading font-semibold leading-relaxed whitespace-pre-wrap" 
+                    style={{ color: textColor, fontFamily, fontSize: `${fontSize}px` }}
+                    dangerouslySetInnerHTML={{ __html: formatText(currentQuestion.text) }}
+                  />
+                </div>
+                <div className="flex justify-center">
+                  <Button onClick={handleRestart} variant="outline" size="lg" style={{ backgroundColor: secondaryBtnColor, color: textColor }}>
+                    Пройти заново
+                  </Button>
+                </div>
               </div>
-              
-              <div className="flex gap-4 justify-center">
-                <Button
-                  size="lg"
-                  onClick={() => handleAnswer('yes')}
-                  className="min-w-32 text-lg hover:scale-105 transition-transform"
-                  style={{ backgroundColor: primaryBtnColor, color: 'white' }}
-                >
-                  Да
-                </Button>
-                <Button
-                  size="lg"
-                  variant="outline"
-                  onClick={() => handleAnswer('no')}
-                  className="min-w-32 text-lg hover:scale-105 transition-transform"
-                  style={{ backgroundColor: secondaryBtnColor, color: textColor }}
-                >
-                  Нет
-                </Button>
+            ) : (
+              <div className="space-y-8">
+                <div className={currentQuestion.textAlign === 'left' ? 'text-left' : 'text-center'}>
+                  <h2 
+                    className="font-heading font-semibold leading-relaxed whitespace-pre-wrap" 
+                    style={{ color: textColor, fontFamily, fontSize: `${fontSize}px` }}
+                    dangerouslySetInnerHTML={{ __html: formatText(currentQuestion.text) }}
+                  />
+                </div>
+                
+                <div className="flex gap-4 justify-center">
+                  <Button
+                    size="lg"
+                    onClick={() => handleAnswer('yes')}
+                    className="min-w-32 text-lg hover:scale-105 transition-transform"
+                    style={{ backgroundColor: primaryBtnColor, color: 'white' }}
+                  >
+                    Да
+                  </Button>
+                  <Button
+                    size="lg"
+                    variant="outline"
+                    onClick={() => handleAnswer('no')}
+                    className="min-w-32 text-lg hover:scale-105 transition-transform"
+                    style={{ backgroundColor: secondaryBtnColor, color: textColor }}
+                  >
+                    Нет
+                  </Button>
+                </div>
               </div>
-            </div>
+            )
           ) : finalMessage ? (
             <div className="space-y-6 animate-fade-in">
               <div className="flex justify-center">
