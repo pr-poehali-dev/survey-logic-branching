@@ -568,17 +568,118 @@ const Index = () => {
         }
         
         function exportSimpleHTML() {
-            let htmlDoc = document.documentElement.outerHTML;
-            htmlDoc = htmlDoc.replace(/<button class="btn-settings"[^>]*>⚙️<\/button>/g, '');
+            const title = document.getElementById('survey-title-input').value;
+            const bg = document.getElementById('bg-color').value;
+            const card = document.getElementById('card-color').value;
+            const text = document.getElementById('text-color').value;
+            const font = document.getElementById('font-family').value;
+            const size = document.getElementById('font-size').value;
             
-            const blob = new Blob([htmlDoc], {type: 'text/html'});
+            const simpleHTML = \`<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Опрос</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: \${font}, -apple-system, sans-serif;
+            background: linear-gradient(135deg, #f8fafc 0%, \${bg} 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        .container { max-width: 800px; width: 100%; }
+        .header { display: flex; justify-content: center; align-items: center; margin-bottom: 32px; animation: fadeIn 0.6s ease-out; }
+        h1 { font-size: 20px; font-weight: bold; color: \${text}; line-height: 1.4; }
+        .card { background: \${card}; padding: 48px; border-radius: 12px; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1); animation: slideUp 0.6s ease-out; }
+        .question-container { display: flex; flex-direction: column; gap: 32px; }
+        .question-text { font-size: \${size}px; font-weight: 600; color: \${text}; line-height: 1.6; white-space: pre-wrap; }
+        .text-left { text-align: left; }
+        .text-center { text-align: center; }
+        .buttons { display: flex; gap: 16px; justify-center: center; }
+        button { min-width: 128px; padding: 12px 24px; font-size: 18px; font-weight: 500; border-radius: 8px; border: none; cursor: pointer; transition: all 0.2s; }
+        .btn-primary { background: \${document.querySelector('.btn-primary')?.style?.backgroundColor || '${primaryBtnColor}'}; color: white; }
+        .btn-primary:hover { opacity: 0.9; transform: scale(1.05); }
+        .btn-secondary { background: \${document.getElementById('card-color')?.value || '${secondaryBtnColor}'}; color: \${text}; border: 2px solid #e2e8f0; }
+        .btn-secondary:hover { opacity: 0.9; transform: scale(1.05); }
+        .final-message { display: flex; flex-direction: column; align-items: center; gap: 24px; animation: fadeIn 0.6s ease-out; }
+        .icon-check { width: 64px; height: 64px; border-radius: 50%; background: rgba(59, 130, 246, 0.1); display: flex; align-items: center; justify-content: center; font-size: 32px; color: \${document.querySelector('.btn-primary')?.style?.backgroundColor || '${primaryBtnColor}'}; }
+        .message-text { font-size: \${size}px; font-weight: 600; color: \${text}; line-height: 1.6; white-space: pre-wrap; }
+        strong { font-weight: bold; }
+        em { font-style: italic; }
+        u { text-decoration: underline; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        @media (max-width: 768px) {
+            h1 { font-size: 16px; }
+            .card { padding: 32px 24px; }
+            .question-text { font-size: 24px; }
+            .message-text { font-size: 20px; }
+            .buttons { flex-direction: column; }
+            button { width: 100%; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header"><h1>\${title}</h1></div>
+        <div class="card"><div id="app"></div></div>
+    </div>
+    <script>
+        let questions = \${JSON.stringify(questions)};
+        let currentQuestionId = questions.length > 0 ? questions[0].id : null;
+        let finalMessage = '';
+        let finalMessageAlign = 'center';
+        
+        function render() {
+            const app = document.getElementById('app');
+            const currentQuestion = questions.find(q => q.id === currentQuestionId);
+            if (currentQuestion) {
+                const align = currentQuestion.textAlign || 'center';
+                const formattedText = currentQuestion.text.replace(/\\\\*\\\\*(.*?)\\\\*\\\\*/g, '<strong>$1</strong>').replace(/__(.*?)__/g, '<u>$1</u>').replace(/\\\\*(.*?)\\\\*/g, '<em>$1</em>');
+                if (!currentQuestion.yesNextId && !currentQuestion.noNextId) {
+                    app.innerHTML = '<div class="final-message"><div class="icon-check">✓</div><div class="text-' + align + '"><div class="message-text">' + formattedText + '</div></div><button class="btn-secondary" onclick="restart()">Пройти заново</button></div>';
+                } else {
+                    app.innerHTML = '<div class="question-container"><div class="text-' + align + '"><div class="question-text">' + formattedText + '</div></div><div class="buttons"><button class="btn-primary" onclick="handleAnswer(\\'yes\\')">Да</button><button class="btn-secondary" onclick="handleAnswer(\\'no\\')">Нет</button></div></div>';
+                }
+            } else if (finalMessage) {
+                const formattedMessage = finalMessage.replace(/\\\\*\\\\*(.*?)\\\\*\\\\*/g, '<strong>$1</strong>').replace(/__(.*?)__/g, '<u>$1</u>').replace(/\\\\*(.*?)\\\\*/g, '<em>$1</em>');
+                app.innerHTML = '<div class="final-message"><div class="icon-check">✓</div><div class="text-' + finalMessageAlign + '"><div class="message-text">' + formattedMessage + '</div></div><button class="btn-secondary" onclick="restart()">Пройти заново</button></div>';
+            } else {
+                app.innerHTML = '<div class="final-message"><div class="message-text">Вопросы не настроены</div></div>';
+            }
+        }
+        function handleAnswer(answer) {
+            const currentQuestion = questions.find(q => q.id === currentQuestionId);
+            if (!currentQuestion) return;
+            const nextId = answer === 'yes' ? currentQuestion.yesNextId : currentQuestion.noNextId;
+            const message = answer === 'yes' ? currentQuestion.yesMessage : currentQuestion.noMessage;
+            const messageAlign = answer === 'yes' ? currentQuestion.yesMessageAlign : currentQuestion.noMessageAlign;
+            if (nextId) { currentQuestionId = nextId; finalMessage = ''; }
+            else if (message) { finalMessage = message; finalMessageAlign = messageAlign || 'center'; currentQuestionId = null; }
+            else { currentQuestionId = null; }
+            render();
+        }
+        function restart() {
+            if (questions.length > 0) { currentQuestionId = questions[0].id; finalMessage = ''; render(); }
+        }
+        render();
+    </script>
+</body>
+</html>\`;
+            
+            const blob = new Blob([simpleHTML], {type: 'text/html'});
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.href = url;
             a.download = 'survey-simple-' + Date.now() + '.html';
             a.click();
             URL.revokeObjectURL(url);
-            alert('Простой HTML экспортирован (без кнопки настроек)!');
+            alert('Простой HTML экспортирован!');
         }
         
         function applyTheme() {
@@ -694,204 +795,6 @@ const Index = () => {
 </html>`;
 
     const htmlWithSettings = withSettings ? htmlContent.replace(
-      `render();
-    </script>`,
-      `render();
-        
-        function toggleSettings() {
-            const settings = document.getElementById('settings');
-            if (settings) {
-                settings.style.display = settings.style.display === 'none' ? 'block' : 'none';
-                if (settings.style.display === 'block') renderQuestionsList();
-            }
-        }
-        
-        function renderQuestionsList() {
-            const list = document.getElementById('questions-list');
-            if (!list) return;
-            
-            if (questions.length === 0) {
-                list.innerHTML = '<p style="color: #6b7280;">Нет вопросов. Добавьте первый вопрос.</p>';
-                return;
-            }
-            
-            list.innerHTML = questions.map((q, i) => 
-                '<div style="padding: 12px; margin: 8px 0; border: 1px solid #e2e8f0; border-radius: 4px; background: white;">' +
-                    '<div style="display: flex; justify-content: space-between; align-items: start;">' +
-                        '<div style="flex: 1;">' +
-                            '<strong>' + (i + 1) + '.</strong> ' + q.text.substring(0, 60) + (q.text.length > 60 ? '...' : '') +
-                            '<div style="font-size: 12px; color: #6b7280; margin-top: 4px;">' +
-                                'Да → ' + (q.yesNextId ? 'вопрос' : (q.yesMessage ? 'сообщение' : 'нет')) + ' | ' +
-                                'Нет → ' + (q.noNextId ? 'вопрос' : (q.noMessage ? 'сообщение' : 'нет')) +
-                            '</div>' +
-                        '</div>' +
-                        '<div style="display: flex; gap: 4px;">' +
-                            '<button onclick="editQuestion(\\'' + q.id + '\\')" style="padding: 6px 10px; background: #3b82f6; color: white; border: none; border-radius: 4px; cursor: pointer;">✏️</button>' +
-                            '<button onclick="deleteQuestion(\\'' + q.id + '\\')" style="padding: 6px 10px; background: #ef4444; color: white; border: none; border-radius: 4px; cursor: pointer;">🗑️</button>' +
-                        '</div>' +
-                    '</div>' +
-                '</div>'
-            ).join('');
-            
-            updateQuestionSelects();
-        }
-        
-        function updateQuestionSelects() {
-            const yesNext = document.getElementById('yes-next');
-            const noNext = document.getElementById('no-next');
-            if (!yesNext || !noNext) return;
-            
-            const currentId = window.editingId;
-            const options = '<option value="none">Нет</option>' + 
-                questions.filter(q => q.id !== currentId).map(q => 
-                    '<option value="' + q.id + '">' + q.text.substring(0, 30) + '...</option>'
-                ).join('');
-            
-            yesNext.innerHTML = options;
-            noNext.innerHTML = options;
-        }
-        
-        function editQuestion(id) {
-            const q = questions.find(x => x.id === id);
-            if (q) {
-                document.getElementById('edit-text').value = q.text;
-                document.getElementById('text-align').value = q.textAlign || 'center';
-                document.getElementById('yes-message').value = q.yesMessage || '';
-                document.getElementById('no-message').value = q.noMessage || '';
-                document.getElementById('yes-message-align').value = q.yesMessageAlign || 'center';
-                document.getElementById('no-message-align').value = q.noMessageAlign || 'center';
-                
-                window.editingId = id;
-                updateQuestionSelects();
-                
-                document.getElementById('yes-next').value = q.yesNextId || 'none';
-                document.getElementById('no-next').value = q.noNextId || 'none';
-            }
-        }
-        
-        function cancelEdit() {
-            window.editingId = null;
-            document.getElementById('edit-text').value = '';
-            document.getElementById('text-align').value = 'center';
-            document.getElementById('yes-next').value = 'none';
-            document.getElementById('no-next').value = 'none';
-            document.getElementById('yes-message').value = '';
-            document.getElementById('no-message').value = '';
-            document.getElementById('yes-message-align').value = 'center';
-            document.getElementById('no-message-align').value = 'center';
-        }
-        
-        function saveQuestion() {
-            const text = document.getElementById('edit-text').value;
-            if (!text.trim()) return alert('Введите текст вопроса');
-            
-            const textAlign = document.getElementById('text-align').value;
-            const yesNextId = document.getElementById('yes-next').value;
-            const noNextId = document.getElementById('no-next').value;
-            const yesMessage = document.getElementById('yes-message').value;
-            const noMessage = document.getElementById('no-message').value;
-            const yesMessageAlign = document.getElementById('yes-message-align').value;
-            const noMessageAlign = document.getElementById('no-message-align').value;
-            
-            if (window.editingId) {
-                questions = questions.map(q => q.id === window.editingId ? {
-                    ...q,
-                    text: text,
-                    textAlign: textAlign,
-                    yesNextId: yesNextId === 'none' ? null : yesNextId,
-                    noNextId: noNextId === 'none' ? null : noNextId,
-                    yesMessage: yesMessage,
-                    noMessage: noMessage,
-                    yesMessageAlign: yesMessageAlign,
-                    noMessageAlign: noMessageAlign
-                } : q);
-                window.editingId = null;
-            }
-            cancelEdit();
-            renderQuestionsList();
-            render();
-        }
-        
-        function addQuestion() {
-            const text = document.getElementById('edit-text').value;
-            if (!text.trim()) return alert('Введите текст вопроса');
-            
-            const textAlign = document.getElementById('text-align').value;
-            const yesNextId = document.getElementById('yes-next').value;
-            const noNextId = document.getElementById('no-next').value;
-            const yesMessage = document.getElementById('yes-message').value;
-            const noMessage = document.getElementById('no-message').value;
-            const yesMessageAlign = document.getElementById('yes-message-align').value;
-            const noMessageAlign = document.getElementById('no-message-align').value;
-            
-            questions.push({
-                id: Date.now().toString(),
-                text: text,
-                textAlign: textAlign,
-                yesNextId: yesNextId === 'none' ? null : yesNextId,
-                noNextId: noNextId === 'none' ? null : noNextId,
-                yesMessage: yesMessage,
-                noMessage: noMessage,
-                yesMessageAlign: yesMessageAlign,
-                noMessageAlign: noMessageAlign
-            });
-            cancelEdit();
-            renderQuestionsList();
-        }
-        
-        function deleteQuestion(id) {
-            if (confirm('Удалить вопрос?')) {
-                questions = questions.filter(q => q.id !== id);
-                renderQuestionsList();
-                if (currentQuestionId === id) restart();
-            }
-        }
-        
-        function exportData() {
-            const data = JSON.stringify(questions, null, 2);
-            const blob = new Blob([data], {type: 'application/json'});
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = 'questions.json';
-            a.click();
-        }
-        
-        function exportSimpleHTML() {
-            let htmlDoc = document.documentElement.outerHTML;
-            htmlDoc = htmlDoc.replace(/<button class="btn-settings"[^>]*>⚙️<\\/button>/g, '');
-            
-            const blob = new Blob([htmlDoc], {type: 'text/html'});
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = 'survey-simple-' + Date.now() + '.html';
-            a.click();
-            URL.revokeObjectURL(url);
-            alert('Простой HTML экспортирован (без кнопки настроек)!');
-        }
-        
-        function applyTheme() {
-            const title = document.getElementById('survey-title-input').value;
-            const bg = document.getElementById('bg-color').value;
-            const card = document.getElementById('card-color').value;
-            const text = document.getElementById('text-color').value;
-            const font = document.getElementById('font-family').value;
-            const size = document.getElementById('font-size').value;
-            
-            document.getElementById('survey-title').textContent = title;
-            document.body.style.background = 'linear-gradient(135deg, #f8fafc 0%, ' + bg + ' 100%)';
-            document.body.style.fontFamily = font + ', -apple-system, sans-serif';
-            document.querySelector('.card').style.background = card;
-            document.querySelectorAll('.question-text, .message-text').forEach(el => {
-                el.style.color = text;
-                el.style.fontSize = size + 'px';
-            });
-            document.querySelector('h1').style.color = text;
-            alert('Тема применена! Перезагрузите страницу, чтобы вернуться к исходной теме.');
-        }
-    </script>`
-    ).replace(
       `<div class="header">
             <h1>${surveyTitle}</h1>
         </div>`,
