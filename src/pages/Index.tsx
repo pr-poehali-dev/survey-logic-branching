@@ -61,6 +61,12 @@ const Index = () => {
   const [newTextAlign, setNewTextAlign] = useState<'left' | 'center'>('center');
   const [newYesMessageAlign, setNewYesMessageAlign] = useState<'left' | 'center'>('center');
   const [newNoMessageAlign, setNewNoMessageAlign] = useState<'left' | 'center'>('center');
+  
+  const [bgColor, setBgColor] = useState('#dbeafe');
+  const [cardBgColor, setCardBgColor] = useState('#ffffff');
+  const [primaryBtnColor, setPrimaryBtnColor] = useState('#3b82f6');
+  const [secondaryBtnColor, setSecondaryBtnColor] = useState('#ffffff');
+  const [textColor, setTextColor] = useState('#0f172a');
 
   useEffect(() => {
     const saved = localStorage.getItem('surveyQuestions');
@@ -74,6 +80,16 @@ const Index = () => {
       setQuestions(defaultQuestions);
       setCurrentQuestionId(defaultQuestions[0].id);
       localStorage.setItem('surveyQuestions', JSON.stringify(defaultQuestions));
+    }
+
+    const savedColors = localStorage.getItem('surveyColors');
+    if (savedColors) {
+      const colors = JSON.parse(savedColors);
+      setBgColor(colors.bgColor || '#dbeafe');
+      setCardBgColor(colors.cardBgColor || '#ffffff');
+      setPrimaryBtnColor(colors.primaryBtnColor || '#3b82f6');
+      setSecondaryBtnColor(colors.secondaryBtnColor || '#ffffff');
+      setTextColor(colors.textColor || '#0f172a');
     }
   }, []);
 
@@ -197,6 +213,12 @@ const Index = () => {
     }
   };
 
+  const handleSaveColors = () => {
+    const colors = { bgColor, cardBgColor, primaryBtnColor, secondaryBtnColor, textColor };
+    localStorage.setItem('surveyColors', JSON.stringify(colors));
+    toast.success('Цветовая схема сохранена');
+  };
+
   const handleExportQuestions = () => {
     const dataStr = JSON.stringify(questions, null, 2);
     const dataBlob = new Blob([dataStr], { type: 'application/json' });
@@ -224,7 +246,7 @@ const Index = () => {
         }
         body {
             font-family: system-ui, -apple-system, sans-serif;
-            background: linear-gradient(135deg, #f8fafc 0%, #dbeafe 100%);
+            background: linear-gradient(135deg, #f8fafc 0%, ${bgColor} 100%);
             min-height: 100vh;
             display: flex;
             align-items: center;
@@ -245,10 +267,10 @@ const Index = () => {
         h1 {
             font-size: 36px;
             font-weight: bold;
-            color: #0f172a;
+            color: ${textColor};
         }
         .card {
-            background: white;
+            background: ${cardBgColor};
             padding: 48px;
             border-radius: 12px;
             box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
@@ -262,7 +284,7 @@ const Index = () => {
         .question-text {
             font-size: 28px;
             font-weight: 600;
-            color: #0f172a;
+            color: ${textColor};
             line-height: 1.6;
             white-space: pre-wrap;
         }
@@ -284,20 +306,20 @@ const Index = () => {
             transition: all 0.2s;
         }
         .btn-primary {
-            background: #3b82f6;
+            background: ${primaryBtnColor};
             color: white;
         }
         .btn-primary:hover {
-            background: #2563eb;
+            opacity: 0.9;
             transform: scale(1.05);
         }
         .btn-secondary {
-            background: white;
-            color: #0f172a;
+            background: ${secondaryBtnColor};
+            color: ${textColor};
             border: 2px solid #e2e8f0;
         }
         .btn-secondary:hover {
-            background: #f8fafc;
+            opacity: 0.9;
             transform: scale(1.05);
         }
         .final-message {
@@ -310,18 +332,18 @@ const Index = () => {
         .icon-check {
             width: 64px;
             height: 64px;
-            background: rgba(59, 130, 246, 0.1);
+            background: ${primaryBtnColor}1a;
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
             font-size: 32px;
-            color: #3b82f6;
+            color: ${primaryBtnColor};
         }
         .message-text {
             font-size: 24px;
             font-weight: 600;
-            color: #0f172a;
+            color: ${textColor};
             white-space: pre-wrap;
         }
         @keyframes fadeIn {
@@ -469,10 +491,13 @@ const Index = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 flex items-center justify-center p-4">
+    <div 
+      className="min-h-screen flex items-center justify-center p-4"
+      style={{ background: `linear-gradient(135deg, #f8fafc 0%, ${bgColor} 100%)` }}
+    >
       <div className="w-full max-w-2xl">
         <div className="flex justify-between items-center mb-8 animate-fade-in">
-          <h1 className="text-4xl font-heading font-bold text-foreground">Опрос</h1>
+          <h1 className="text-4xl font-heading font-bold" style={{ color: textColor }}>Опрос</h1>
           <Sheet open={isSettingsOpen} onOpenChange={setIsSettingsOpen}>
             <SheetTrigger asChild>
               <Button variant="outline" size="icon" className="rounded-full">
@@ -688,16 +713,117 @@ const Index = () => {
                     Сбросить к настройкам по умолчанию
                   </Button>
                 </div>
+
+                <div className="border-t pt-4 space-y-3">
+                  <h3 className="font-heading font-semibold text-lg">Цветовая схема</h3>
+                  
+                  <div className="space-y-3">
+                    <div className="space-y-2">
+                      <Label htmlFor="bg-color">Цвет фона</Label>
+                      <div className="flex gap-2">
+                        <Input
+                          id="bg-color"
+                          type="color"
+                          value={bgColor}
+                          onChange={(e) => setBgColor(e.target.value)}
+                          className="w-20 h-10"
+                        />
+                        <Input
+                          value={bgColor}
+                          onChange={(e) => setBgColor(e.target.value)}
+                          className="flex-1"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="card-bg-color">Цвет карточки</Label>
+                      <div className="flex gap-2">
+                        <Input
+                          id="card-bg-color"
+                          type="color"
+                          value={cardBgColor}
+                          onChange={(e) => setCardBgColor(e.target.value)}
+                          className="w-20 h-10"
+                        />
+                        <Input
+                          value={cardBgColor}
+                          onChange={(e) => setCardBgColor(e.target.value)}
+                          className="flex-1"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="primary-btn-color">Цвет кнопки "Да"</Label>
+                      <div className="flex gap-2">
+                        <Input
+                          id="primary-btn-color"
+                          type="color"
+                          value={primaryBtnColor}
+                          onChange={(e) => setPrimaryBtnColor(e.target.value)}
+                          className="w-20 h-10"
+                        />
+                        <Input
+                          value={primaryBtnColor}
+                          onChange={(e) => setPrimaryBtnColor(e.target.value)}
+                          className="flex-1"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="secondary-btn-color">Цвет кнопки "Нет"</Label>
+                      <div className="flex gap-2">
+                        <Input
+                          id="secondary-btn-color"
+                          type="color"
+                          value={secondaryBtnColor}
+                          onChange={(e) => setSecondaryBtnColor(e.target.value)}
+                          className="w-20 h-10"
+                        />
+                        <Input
+                          value={secondaryBtnColor}
+                          onChange={(e) => setSecondaryBtnColor(e.target.value)}
+                          className="flex-1"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="text-color">Цвет текста</Label>
+                      <div className="flex gap-2">
+                        <Input
+                          id="text-color"
+                          type="color"
+                          value={textColor}
+                          onChange={(e) => setTextColor(e.target.value)}
+                          className="w-20 h-10"
+                        />
+                        <Input
+                          value={textColor}
+                          onChange={(e) => setTextColor(e.target.value)}
+                          className="flex-1"
+                        />
+                      </div>
+                    </div>
+
+                    <Button className="w-full" onClick={handleSaveColors}>
+                      <Icon name="Save" size={16} className="mr-2" />
+                      Сохранить цвета
+                    </Button>
+                  </div>
+                </div>
               </div>
             </SheetContent>
           </Sheet>
         </div>
 
-        <Card className="p-8 md:p-12 shadow-xl animate-slide-up">
+        <Card className="p-8 md:p-12 shadow-xl animate-slide-up" style={{ backgroundColor: cardBgColor }}>
           {currentQuestion ? (
             <div className="space-y-8">
               <div className={currentQuestion.textAlign === 'left' ? 'text-left' : 'text-center'}>
-                <h2 className="text-2xl md:text-3xl font-heading font-semibold text-foreground leading-relaxed whitespace-pre-wrap">
+                <h2 className="text-2xl md:text-3xl font-heading font-semibold leading-relaxed whitespace-pre-wrap" style={{ color: textColor }}>
                   {currentQuestion.text}
                 </h2>
               </div>
@@ -707,6 +833,7 @@ const Index = () => {
                   size="lg"
                   onClick={() => handleAnswer('yes')}
                   className="min-w-32 text-lg hover:scale-105 transition-transform"
+                  style={{ backgroundColor: primaryBtnColor, color: 'white' }}
                 >
                   Да
                 </Button>
@@ -715,6 +842,7 @@ const Index = () => {
                   variant="outline"
                   onClick={() => handleAnswer('no')}
                   className="min-w-32 text-lg hover:scale-105 transition-transform"
+                  style={{ backgroundColor: secondaryBtnColor, color: textColor }}
                 >
                   Нет
                 </Button>
@@ -723,16 +851,18 @@ const Index = () => {
           ) : finalMessage ? (
             <div className="space-y-6 animate-fade-in">
               <div className="flex justify-center">
-                <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center">
-                  <Icon name="Check" size={32} className="text-primary" />
+                <div className="w-16 h-16 rounded-full flex items-center justify-center" style={{ backgroundColor: `${primaryBtnColor}1a` }}>
+                  <Icon name="Check" size={32} style={{ color: primaryBtnColor }} />
                 </div>
               </div>
-              <p className={`text-xl md:text-2xl font-heading font-semibold text-foreground whitespace-pre-wrap ${finalMessageAlign === 'left' ? 'text-left' : 'text-center'}`}>
+              <p className={`text-xl md:text-2xl font-heading font-semibold whitespace-pre-wrap ${finalMessageAlign === 'left' ? 'text-left' : 'text-center'}`} style={{ color: textColor }}>
                 {finalMessage}
               </p>
-              <Button onClick={handleRestart} variant="outline" size="lg">
-                Пройти заново
-              </Button>
+              <div className="flex justify-center">
+                <Button onClick={handleRestart} variant="outline" size="lg" style={{ backgroundColor: secondaryBtnColor, color: textColor }}>
+                  Пройти заново
+                </Button>
+              </div>
             </div>
           ) : (
             <div className="text-center space-y-4 animate-fade-in">
