@@ -71,6 +71,7 @@ const Index = () => {
   const [fontFamily, setFontFamily] = useState('system-ui');
   const [fontSize, setFontSize] = useState('28');
   const [showExportDialog, setShowExportDialog] = useState(false);
+  const [surveyTitle, setSurveyTitle] = useState('Опрос');
 
   useEffect(() => {
     const saved = localStorage.getItem('surveyQuestions');
@@ -96,6 +97,7 @@ const Index = () => {
       setTextColor(colors.textColor || '#0f172a');
       setFontFamily(colors.fontFamily || 'system-ui');
       setFontSize(colors.fontSize || '28');
+      setSurveyTitle(colors.surveyTitle || 'Опрос');
     }
   }, []);
 
@@ -222,7 +224,7 @@ const Index = () => {
   };
 
   const handleSaveColors = () => {
-    const colors = { bgColor, cardBgColor, primaryBtnColor, secondaryBtnColor, textColor, fontFamily, fontSize };
+    const colors = { bgColor, cardBgColor, primaryBtnColor, secondaryBtnColor, textColor, fontFamily, fontSize, surveyTitle };
     localStorage.setItem('surveyColors', JSON.stringify(colors));
     toast.success('Цветовая схема сохранена');
   };
@@ -280,9 +282,10 @@ const Index = () => {
             animation: fadeIn 0.6s ease-out;
         }
         h1 {
-            font-size: 36px;
+            font-size: 20px;
             font-weight: bold;
             color: ${textColor};
+            line-height: 1.4;
         }
         .card {
             background: ${cardBgColor};
@@ -379,7 +382,7 @@ const Index = () => {
             }
         }
         @media (max-width: 768px) {
-            h1 { font-size: 28px; }
+            h1 { font-size: 16px; }
             .card { padding: 32px 24px; }
             .question-text { font-size: 24px; }
             .message-text { font-size: 20px; }
@@ -391,7 +394,7 @@ const Index = () => {
 <body>
     <div class="container">
         <div class="header">
-            <h1>Опрос</h1>
+            <h1>${surveyTitle}</h1>
         </div>
         <div class="card">
             <div id="app"></div>
@@ -498,13 +501,17 @@ const Index = () => {
 </html>`;
 
     const htmlWithSettings = withSettings ? htmlContent.replace(
-      '<div class="header">\n            <h1>Опрос</h1>\n        </div>',
+      '<div class="header">',
       `<div class="header">
-            <h1>Опрос</h1>
-            <button class="btn-settings" onclick="toggleSettings()" style="padding: 8px 12px; background: rgba(255,255,255,0.9); border: 1px solid #e2e8f0; border-radius: 8px; cursor: pointer;">⚙️</button>
+            <h1 id="survey-title">${surveyTitle}</h1>
+            <button class="btn-settings" onclick="toggleSettings()" style="padding: 8px 12px; background: rgba(255,255,255,0.9); border: 1px solid #e2e8f0; border-radius: 8px; cursor: pointer; font-size: 18px;">⚙️</button>
         </div>
         <div id="settings" style="display:none; background: white; padding: 20px; border-radius: 8px; margin-bottom: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
             <h3 style="margin-bottom: 15px;">Настройки опроса</h3>
+            <div style="margin-bottom: 10px;">
+                <label>Название опроса:</label>
+                <input type="text" id="survey-title-input" value="${surveyTitle}" style="width: 100%; padding: 8px; margin-top: 5px; border: 1px solid #e2e8f0; border-radius: 4px;">
+            </div>
             <div style="margin-bottom: 10px;">
                 <label>Текст вопроса (используйте **жирный**, *курсив*, __подчеркнутый__):</label>
                 <textarea id="edit-text" style="width: 100%; padding: 8px; margin-top: 5px; border: 1px solid #e2e8f0; border-radius: 4px;" rows="3"></textarea>
@@ -525,11 +532,11 @@ const Index = () => {
                 <div>
                     <label>Шрифт:</label>
                     <select id="font-family" style="width: 100%; padding: 8px; margin-top: 5px; border: 1px solid #e2e8f0; border-radius: 4px;">
-                        <option value="system-ui" ${fontFamily === 'system-ui' ? 'selected' : ''}>System UI</option>
-                        <option value="Arial" ${fontFamily === 'Arial' ? 'selected' : ''}>Arial</option>
-                        <option value="Georgia" ${fontFamily === 'Georgia' ? 'selected' : ''}>Georgia</option>
-                        <option value="Times New Roman" ${fontFamily === 'Times New Roman' ? 'selected' : ''}>Times New Roman</option>
-                        <option value="Courier New" ${fontFamily === 'Courier New' ? 'selected' : ''}>Courier New</option>
+                        <option value="system-ui">System UI</option>
+                        <option value="Arial">Arial</option>
+                        <option value="Georgia">Georgia</option>
+                        <option value="Times New Roman">Times New Roman</option>
+                        <option value="Courier New">Courier New</option>
                     </select>
                 </div>
                 <div>
@@ -542,7 +549,7 @@ const Index = () => {
             <button onclick="applyTheme()" style="padding: 8px 16px; background: #f59e0b; color: white; border: none; border-radius: 4px; cursor: pointer; margin-left: 8px;">Применить тему</button>
             <button onclick="exportData()" style="padding: 8px 16px; background: #6366f1; color: white; border: none; border-radius: 4px; cursor: pointer; margin-left: 8px;">Экспорт JSON</button>
             <div id="questions-list" style="margin-top: 20px;"></div>
-        </div>`
+        </div>
     ).replace(
       'render();',
       `function toggleSettings() {
@@ -621,19 +628,22 @@ const Index = () => {
         }
         
         function applyTheme() {
+            const title = document.getElementById('survey-title-input').value;
             const bg = document.getElementById('bg-color').value;
             const card = document.getElementById('card-color').value;
             const text = document.getElementById('text-color').value;
             const font = document.getElementById('font-family').value;
             const size = document.getElementById('font-size').value;
             
+            document.getElementById('survey-title').textContent = title;
             document.body.style.background = \`linear-gradient(135deg, #f8fafc 0%, \${bg} 100%)\`;
             document.body.style.fontFamily = \`\${font}, -apple-system, sans-serif\`;
             document.querySelector('.card').style.background = card;
-            document.querySelectorAll('.question-text, .message-text, h1').forEach(el => {
+            document.querySelectorAll('.question-text, .message-text').forEach(el => {
                 el.style.color = text;
                 el.style.fontSize = \`\${size}px\`;
             });
+            document.querySelector('h1').style.color = text;
             alert('Тема применена! Перезагрузите страницу, чтобы вернуться к исходной теме.');
         }
         
@@ -680,8 +690,13 @@ const Index = () => {
     >
       <div className="w-full max-w-2xl">
         <div className="flex justify-between items-center mb-8 animate-fade-in">
-          <h1 className="font-heading font-bold text-xl" style={{ color: textColor }}>Оценка возможности постановки на учет граждан в качестве нуждающихся в жилых помещениях, предоставляемых 
-по договорам социального найма (жилищный учет)</h1>
+          <Input
+            value={surveyTitle}
+            onChange={(e) => setSurveyTitle(e.target.value)}
+            className="font-heading font-bold text-xl border-0 focus-visible:ring-0 px-0"
+            style={{ color: textColor }}
+            placeholder="Название опроса"
+          />
           <Sheet open={isSettingsOpen} onOpenChange={setIsSettingsOpen}>
             <SheetTrigger asChild>
               <Button variant="outline" size="icon" className="rounded-full">
@@ -903,6 +918,16 @@ const Index = () => {
 
                 <div className="border-t pt-4 space-y-3">
                   <h3 className="font-heading font-semibold text-lg">Цветовая схема</h3>
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="survey-title">Название опроса</Label>
+                    <Input
+                      id="survey-title"
+                      value={surveyTitle}
+                      onChange={(e) => setSurveyTitle(e.target.value)}
+                      placeholder="Опрос"
+                    />
+                  </div>
                   
                   <div className="space-y-3">
                     <div className="space-y-2">
