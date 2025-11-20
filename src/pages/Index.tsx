@@ -1024,7 +1024,7 @@ const Index = () => {
             <div className="space-y-8">
               <div className={currentQuestion.textAlign === 'left' ? 'text-left' : 'text-center'}>
                 <h2 
-                  className="font-heading font-semibold leading-relaxed whitespace-pre-wrap" 
+                  className="font-heading font-semibold leading-relaxed whitespace-pre-wrap text-2xl" 
                   style={{ color: textColor, fontFamily, fontSize: `${fontSize}px` }}
                   dangerouslySetInnerHTML={{ __html: formatText(currentQuestion.text) }}
                 />
