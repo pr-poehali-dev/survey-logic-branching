@@ -501,7 +501,9 @@ const Index = () => {
 </html>`;
 
     const htmlWithSettings = withSettings ? htmlContent.replace(
-      '<div class="header">',
+      `<div class="header">
+            <h1>${surveyTitle}</h1>
+        </div>`,
       `<div class="header">
             <h1 id="survey-title">${surveyTitle}</h1>
             <button class="btn-settings" onclick="toggleSettings()" style="padding: 8px 12px; background: rgba(255,255,255,0.9); border: 1px solid #e2e8f0; border-radius: 8px; cursor: pointer; font-size: 18px;">⚙️</button>
