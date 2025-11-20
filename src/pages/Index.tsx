@@ -800,9 +800,8 @@ const Index = () => {
         </div>`,
       `<div class="header">
             <h1 id="survey-title">${surveyTitle}</h1>
-            <button class="btn-settings" onclick="toggleSettings()" style="padding: 8px 12px; background: rgba(255,255,255,0.9); border: 1px solid #e2e8f0; border-radius: 8px; cursor: pointer; font-size: 18px;">⚙️</button>
         </div>
-        <div id="settings" style="display:none; background: white; padding: 20px; border-radius: 8px; margin-bottom: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); max-height: 80vh; overflow-y: auto;">
+        <div id="settings" style="display:block; background: white; padding: 20px; border-radius: 8px; margin-bottom: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); max-height: 80vh; overflow-y: auto;">
             <h3 style="margin-bottom: 15px;">Настройки опроса</h3>
             
             <div style="margin-bottom: 20px; padding: 15px; background: #f8fafc; border-radius: 8px;">
