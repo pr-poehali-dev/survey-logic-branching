@@ -1100,9 +1100,7 @@ const Index = () => {
                 dangerouslySetInnerHTML={{ __html: formatText(finalMessage) }}
               />
               <div className="flex justify-center">
-                <Button onClick={handleRestart} variant="outline" size="lg" style={{ backgroundColor: secondaryBtnColor, color: textColor }}>
-                  Пройти заново
-                </Button>
+                <Button onClick={handleRestart} variant="outline" size="lg" style={{ backgroundColor: secondaryBtnColor, color: textColor }}>Пройти оценку заново</Button>
               </div>
             </div>
           ) : (
