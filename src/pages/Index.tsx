@@ -605,7 +605,7 @@ const Index = () => {
                             <div class="text-\${align}">
                                 <div class="message-text">\${formattedText}</div>
                             </div>
-                            <button class="btn-secondary" onclick="restart()">Пройти заново</button>
+                            <button class="btn-secondary" onclick="restart()">Пройти оценку заново</button>
                         </div>
                     \`;
                 } else {
@@ -632,7 +632,7 @@ const Index = () => {
                         <div class="text-\${finalMessageAlign}">
                             <div class="message-text">\${formattedMessage}</div>
                         </div>
-                        <button class="btn-secondary" onclick="restart()">Пройти заново</button>
+                        <button class="btn-secondary" onclick="restart()">Пройти оценку заново</button>
                     </div>
                 \`;
             } else {
