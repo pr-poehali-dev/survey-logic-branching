@@ -549,7 +549,7 @@ const Index = () => {
             <button onclick="applyTheme()" style="padding: 8px 16px; background: #f59e0b; color: white; border: none; border-radius: 4px; cursor: pointer; margin-left: 8px;">Применить тему</button>
             <button onclick="exportData()" style="padding: 8px 16px; background: #6366f1; color: white; border: none; border-radius: 4px; cursor: pointer; margin-left: 8px;">Экспорт JSON</button>
             <div id="questions-list" style="margin-top: 20px;"></div>
-        </div>
+        </div>`
     ).replace(
       'render();',
       `function toggleSettings() {
