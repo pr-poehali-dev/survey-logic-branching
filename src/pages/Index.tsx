@@ -209,6 +209,243 @@ const Index = () => {
     toast.success('Опрос экспортирован');
   };
 
+  const handleExportHTML = () => {
+    const htmlContent = `<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Опрос</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: system-ui, -apple-system, sans-serif;
+            background: linear-gradient(135deg, #f8fafc 0%, #dbeafe 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        .container {
+            max-width: 800px;
+            width: 100%;
+        }
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 32px;
+            animation: fadeIn 0.6s ease-out;
+        }
+        h1 {
+            font-size: 36px;
+            font-weight: bold;
+            color: #0f172a;
+        }
+        .card {
+            background: white;
+            padding: 48px;
+            border-radius: 12px;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+            animation: slideUp 0.6s ease-out;
+        }
+        .question-container {
+            display: flex;
+            flex-direction: column;
+            gap: 32px;
+        }
+        .question-text {
+            font-size: 28px;
+            font-weight: 600;
+            color: #0f172a;
+            line-height: 1.6;
+            white-space: pre-wrap;
+        }
+        .text-left { text-align: left; }
+        .text-center { text-align: center; }
+        .buttons {
+            display: flex;
+            gap: 16px;
+            justify-content: center;
+        }
+        button {
+            min-width: 128px;
+            padding: 12px 24px;
+            font-size: 18px;
+            font-weight: 500;
+            border-radius: 8px;
+            border: none;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .btn-primary {
+            background: #3b82f6;
+            color: white;
+        }
+        .btn-primary:hover {
+            background: #2563eb;
+            transform: scale(1.05);
+        }
+        .btn-secondary {
+            background: white;
+            color: #0f172a;
+            border: 2px solid #e2e8f0;
+        }
+        .btn-secondary:hover {
+            background: #f8fafc;
+            transform: scale(1.05);
+        }
+        .final-message {
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+            align-items: center;
+            animation: fadeIn 0.6s ease-out;
+        }
+        .icon-check {
+            width: 64px;
+            height: 64px;
+            background: rgba(59, 130, 246, 0.1);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 32px;
+            color: #3b82f6;
+        }
+        .message-text {
+            font-size: 24px;
+            font-weight: 600;
+            color: #0f172a;
+            white-space: pre-wrap;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        @keyframes slideUp {
+            from { 
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to { 
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        @media (max-width: 768px) {
+            h1 { font-size: 28px; }
+            .card { padding: 32px 24px; }
+            .question-text { font-size: 24px; }
+            .message-text { font-size: 20px; }
+            .buttons { flex-direction: column; }
+            button { width: 100%; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Опрос</h1>
+        </div>
+        <div class="card">
+            <div id="app"></div>
+        </div>
+    </div>
+
+    <script>
+        const questions = ${JSON.stringify(questions)};
+        
+        let currentQuestionId = questions.length > 0 ? questions[0].id : null;
+        let finalMessage = '';
+        let finalMessageAlign = 'center';
+
+        function render() {
+            const app = document.getElementById('app');
+            const currentQuestion = questions.find(q => q.id === currentQuestionId);
+
+            if (currentQuestion) {
+                const align = currentQuestion.textAlign || 'center';
+                app.innerHTML = \`
+                    <div class="question-container">
+                        <div class="text-\${align}">
+                            <div class="question-text">\${currentQuestion.text}</div>
+                        </div>
+                        <div class="buttons">
+                            <button class="btn-primary" onclick="handleAnswer('yes')">Да</button>
+                            <button class="btn-secondary" onclick="handleAnswer('no')">Нет</button>
+                        </div>
+                    </div>
+                \`;
+            } else if (finalMessage) {
+                app.innerHTML = \`
+                    <div class="final-message">
+                        <div class="icon-check">✓</div>
+                        <div class="text-\${finalMessageAlign}">
+                            <div class="message-text">\${finalMessage}</div>
+                        </div>
+                        <button class="btn-secondary" onclick="restart()">Пройти заново</button>
+                    </div>
+                \`;
+            } else {
+                app.innerHTML = \`
+                    <div class="final-message">
+                        <div class="message-text">Вопросы не настроены</div>
+                    </div>
+                \`;
+            }
+        }
+
+        function handleAnswer(answer) {
+            const currentQuestion = questions.find(q => q.id === currentQuestionId);
+            if (!currentQuestion) return;
+
+            const nextId = answer === 'yes' ? currentQuestion.yesNextId : currentQuestion.noNextId;
+            const message = answer === 'yes' ? currentQuestion.yesMessage : currentQuestion.noMessage;
+            const messageAlign = answer === 'yes' ? currentQuestion.yesMessageAlign : currentQuestion.noMessageAlign;
+
+            if (nextId) {
+                currentQuestionId = nextId;
+                finalMessage = '';
+            } else if (message) {
+                finalMessage = message;
+                finalMessageAlign = messageAlign || 'center';
+                currentQuestionId = null;
+            } else {
+                currentQuestionId = null;
+            }
+
+            render();
+        }
+
+        function restart() {
+            if (questions.length > 0) {
+                currentQuestionId = questions[0].id;
+                finalMessage = '';
+                render();
+            }
+        }
+
+        render();
+    </script>
+</body>
+</html>`;
+
+    const blob = new Blob([htmlContent], { type: 'text/html' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `survey-${Date.now()}.html`;
+    link.click();
+    URL.revokeObjectURL(url);
+    toast.success('HTML файл экспортирован');
+  };
+
   const handleImportQuestions = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
@@ -416,15 +653,23 @@ const Index = () => {
                       onClick={handleExportQuestions}
                     >
                       <Icon name="Download" size={16} className="mr-2" />
-                      Экспорт
+                      JSON
                     </Button>
                     <Button 
                       variant="outline" 
                       className="w-full"
+                      onClick={handleExportHTML}
+                    >
+                      <Icon name="FileCode" size={16} className="mr-2" />
+                      HTML
+                    </Button>
+                    <Button 
+                      variant="outline" 
+                      className="w-full col-span-2"
                       onClick={() => document.getElementById('import-file')?.click()}
                     >
                       <Icon name="Upload" size={16} className="mr-2" />
-                      Импорт
+                      Импорт JSON
                     </Button>
                     <input
                       id="import-file"
