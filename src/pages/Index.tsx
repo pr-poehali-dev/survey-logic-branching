@@ -113,6 +113,10 @@ const Index = () => {
       setQuestions(updated);
       localStorage.setItem('surveyQuestions', JSON.stringify(updated));
       toast.success('Вопрос обновлен');
+      
+      if (currentQuestionId === editingQuestion.id) {
+        handleRestart();
+      }
     } else {
       const newQuestion: Question = {
         id: Date.now().toString(),
