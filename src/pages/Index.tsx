@@ -68,6 +68,8 @@ const Index = () => {
   const [primaryBtnColor, setPrimaryBtnColor] = useState('#3b82f6');
   const [secondaryBtnColor, setSecondaryBtnColor] = useState('#ffffff');
   const [textColor, setTextColor] = useState('#0f172a');
+  const [fontFamily, setFontFamily] = useState('system-ui');
+  const [fontSize, setFontSize] = useState('28');
   const [showExportDialog, setShowExportDialog] = useState(false);
 
   useEffect(() => {
@@ -92,6 +94,8 @@ const Index = () => {
       setPrimaryBtnColor(colors.primaryBtnColor || '#3b82f6');
       setSecondaryBtnColor(colors.secondaryBtnColor || '#ffffff');
       setTextColor(colors.textColor || '#0f172a');
+      setFontFamily(colors.fontFamily || 'system-ui');
+      setFontSize(colors.fontSize || '28');
     }
   }, []);
 
@@ -216,9 +220,16 @@ const Index = () => {
   };
 
   const handleSaveColors = () => {
-    const colors = { bgColor, cardBgColor, primaryBtnColor, secondaryBtnColor, textColor };
+    const colors = { bgColor, cardBgColor, primaryBtnColor, secondaryBtnColor, textColor, fontFamily, fontSize };
     localStorage.setItem('surveyColors', JSON.stringify(colors));
     toast.success('Цветовая схема сохранена');
+  };
+
+  const formatText = (text: string) => {
+    return text
+      .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+      .replace(/__(.*?)__/g, '<u>$1</u>')
+      .replace(/\*(.*?)\*/g, '<em>$1</em>');
   };
 
   const handleExportQuestions = () => {
@@ -247,7 +258,7 @@ const Index = () => {
             box-sizing: border-box;
         }
         body {
-            font-family: system-ui, -apple-system, sans-serif;
+            font-family: ${fontFamily}, -apple-system, sans-serif;
             background: linear-gradient(135deg, #f8fafc 0%, ${bgColor} 100%);
             min-height: 100vh;
             display: flex;
@@ -284,7 +295,7 @@ const Index = () => {
             gap: 32px;
         }
         .question-text {
-            font-size: 28px;
+            font-size: ${fontSize}px;
             font-weight: 600;
             color: ${textColor};
             line-height: 1.6;
@@ -343,11 +354,14 @@ const Index = () => {
             color: ${primaryBtnColor};
         }
         .message-text {
-            font-size: 24px;
+            font-size: ${fontSize}px;
             font-weight: 600;
             color: ${textColor};
             white-space: pre-wrap;
         }
+        strong { font-weight: bold; }
+        em { font-style: italic; }
+        u { text-decoration: underline; }
         @keyframes fadeIn {
             from { opacity: 0; }
             to { opacity: 1; }
@@ -395,10 +409,14 @@ const Index = () => {
 
             if (currentQuestion) {
                 const align = currentQuestion.textAlign || 'center';
+                const formattedText = currentQuestion.text
+                    .replace(/\\*\\*(.*?)\\*\\*/g, '<strong>$1</strong>')
+                    .replace(/__(.*?)__/g, '<u>$1</u>')
+                    .replace(/\\*(.*?)\\*/g, '<em>$1</em>');
                 app.innerHTML = \`
                     <div class="question-container">
                         <div class="text-\${align}">
-                            <div class="question-text">\${currentQuestion.text}</div>
+                            <div class="question-text">\${formattedText}</div>
                         </div>
                         <div class="buttons">
                             <button class="btn-primary" onclick="handleAnswer('yes')">Да</button>
@@ -407,11 +425,15 @@ const Index = () => {
                     </div>
                 \`;
             } else if (finalMessage) {
+                const formattedMessage = finalMessage
+                    .replace(/\\*\\*(.*?)\\*\\*/g, '<strong>$1</strong>')
+                    .replace(/__(.*?)__/g, '<u>$1</u>')
+                    .replace(/\\*(.*?)\\*/g, '<em>$1</em>');
                 app.innerHTML = \`
                     <div class="final-message">
                         <div class="icon-check">✓</div>
                         <div class="text-\${finalMessageAlign}">
-                            <div class="message-text">\${finalMessage}</div>
+                            <div class="message-text">\${formattedMessage}</div>
                         </div>
                         <button class="btn-secondary" onclick="restart()">Пройти заново</button>
                     </div>
@@ -469,11 +491,40 @@ const Index = () => {
         <div id="settings" style="display:none; background: white; padding: 20px; border-radius: 8px; margin-bottom: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
             <h3 style="margin-bottom: 15px;">Настройки опроса</h3>
             <div style="margin-bottom: 10px;">
-                <label>Текст вопроса:</label>
+                <label>Текст вопроса (используйте **жирный**, *курсив*, __подчеркнутый__):</label>
                 <textarea id="edit-text" style="width: 100%; padding: 8px; margin-top: 5px; border: 1px solid #e2e8f0; border-radius: 4px;" rows="3"></textarea>
             </div>
-            <button onclick="saveQuestion()" style="padding: 8px 16px; background: ${primaryBtnColor}; color: white; border: none; border-radius: 4px; cursor: pointer;">Сохранить</button>
+            <div style="margin-bottom: 10px; display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                <div>
+                    <label>Цвет фона:</label>
+                    <input type="color" id="bg-color" value="${bgColor}" style="width: 100%; height: 40px; margin-top: 5px;">
+                </div>
+                <div>
+                    <label>Цвет карточки:</label>
+                    <input type="color" id="card-color" value="${cardBgColor}" style="width: 100%; height: 40px; margin-top: 5px;">
+                </div>
+                <div>
+                    <label>Цвет текста:</label>
+                    <input type="color" id="text-color" value="${textColor}" style="width: 100%; height: 40px; margin-top: 5px;">
+                </div>
+                <div>
+                    <label>Шрифт:</label>
+                    <select id="font-family" style="width: 100%; padding: 8px; margin-top: 5px; border: 1px solid #e2e8f0; border-radius: 4px;">
+                        <option value="system-ui" ${fontFamily === 'system-ui' ? 'selected' : ''}>System UI</option>
+                        <option value="Arial" ${fontFamily === 'Arial' ? 'selected' : ''}>Arial</option>
+                        <option value="Georgia" ${fontFamily === 'Georgia' ? 'selected' : ''}>Georgia</option>
+                        <option value="Times New Roman" ${fontFamily === 'Times New Roman' ? 'selected' : ''}>Times New Roman</option>
+                        <option value="Courier New" ${fontFamily === 'Courier New' ? 'selected' : ''}>Courier New</option>
+                    </select>
+                </div>
+                <div>
+                    <label>Размер шрифта:</label>
+                    <input type="number" id="font-size" value="${fontSize}" min="16" max="48" style="width: 100%; padding: 8px; margin-top: 5px; border: 1px solid #e2e8f0; border-radius: 4px;">
+                </div>
+            </div>
+            <button onclick="saveQuestion()" style="padding: 8px 16px; background: ${primaryBtnColor}; color: white; border: none; border-radius: 4px; cursor: pointer;">Сохранить вопрос</button>
             <button onclick="addQuestion()" style="padding: 8px 16px; background: #10b981; color: white; border: none; border-radius: 4px; cursor: pointer; margin-left: 8px;">Добавить вопрос</button>
+            <button onclick="applyTheme()" style="padding: 8px 16px; background: #f59e0b; color: white; border: none; border-radius: 4px; cursor: pointer; margin-left: 8px;">Применить тему</button>
             <button onclick="exportData()" style="padding: 8px 16px; background: #6366f1; color: white; border: none; border-radius: 4px; cursor: pointer; margin-left: 8px;">Экспорт JSON</button>
             <div id="questions-list" style="margin-top: 20px;"></div>
         </div>`
@@ -554,6 +605,23 @@ const Index = () => {
             a.click();
         }
         
+        function applyTheme() {
+            const bg = document.getElementById('bg-color').value;
+            const card = document.getElementById('card-color').value;
+            const text = document.getElementById('text-color').value;
+            const font = document.getElementById('font-family').value;
+            const size = document.getElementById('font-size').value;
+            
+            document.body.style.background = \`linear-gradient(135deg, #f8fafc 0%, \${bg} 100%)\`;
+            document.body.style.fontFamily = \`\${font}, -apple-system, sans-serif\`;
+            document.querySelector('.card').style.background = card;
+            document.querySelectorAll('.question-text, .message-text, h1').forEach(el => {
+                el.style.color = text;
+                el.style.fontSize = \`\${size}px\`;
+            });
+            alert('Тема применена! Перезагрузите страницу, чтобы вернуться к исходной теме.');
+        }
+        
         render();`
     ) : htmlContent;
 
@@ -621,9 +689,12 @@ const Index = () => {
                       id="question-text"
                       value={newQuestionText}
                       onChange={(e) => setNewQuestionText(e.target.value)}
-                      placeholder="Введите вопрос"
+                      placeholder="Введите вопрос. Форматирование: **жирный**, *курсив*, __подчеркнутый__"
                       rows={3}
                     />
+                    <p className="text-xs text-muted-foreground">
+                      Используйте **текст** для жирного, *текст* для курсива, __текст__ для подчеркнутого
+                    </p>
                   </div>
 
                   <div className="space-y-2">
@@ -681,7 +752,7 @@ const Index = () => {
                       id="yes-message"
                       value={newYesMessage}
                       onChange={(e) => setNewYesMessage(e.target.value)}
-                      placeholder="Сообщение при ответе 'Да'"
+                      placeholder="Сообщение при ответе 'Да'. Форматирование: **жирный**, *курсив*, __подчеркнутый__"
                       rows={3}
                     />
                   </div>
@@ -705,7 +776,7 @@ const Index = () => {
                       id="no-message"
                       value={newNoMessage}
                       onChange={(e) => setNewNoMessage(e.target.value)}
-                      placeholder="Сообщение при ответе 'Нет'"
+                      placeholder="Сообщение при ответе 'Нет'. Форматирование: **жирный**, *курсив*, __подчеркнутый__"
                       rows={3}
                     />
                   </div>
@@ -908,9 +979,37 @@ const Index = () => {
                       </div>
                     </div>
 
+                    <div className="space-y-2">
+                      <Label htmlFor="font-family">Шрифт</Label>
+                      <Select value={fontFamily} onValueChange={setFontFamily}>
+                        <SelectTrigger id="font-family">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="system-ui">System UI</SelectItem>
+                          <SelectItem value="Arial">Arial</SelectItem>
+                          <SelectItem value="Georgia">Georgia</SelectItem>
+                          <SelectItem value="Times New Roman">Times New Roman</SelectItem>
+                          <SelectItem value="Courier New">Courier New</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="font-size">Размер шрифта (px)</Label>
+                      <Input
+                        id="font-size"
+                        type="number"
+                        min="16"
+                        max="48"
+                        value={fontSize}
+                        onChange={(e) => setFontSize(e.target.value)}
+                      />
+                    </div>
+
                     <Button className="w-full" onClick={handleSaveColors}>
                       <Icon name="Save" size={16} className="mr-2" />
-                      Сохранить цвета
+                      Сохранить тему
                     </Button>
                   </div>
                 </div>
@@ -923,9 +1022,11 @@ const Index = () => {
           {currentQuestion ? (
             <div className="space-y-8">
               <div className={currentQuestion.textAlign === 'left' ? 'text-left' : 'text-center'}>
-                <h2 className="text-2xl md:text-3xl font-heading font-semibold leading-relaxed whitespace-pre-wrap" style={{ color: textColor }}>
-                  {currentQuestion.text}
-                </h2>
+                <h2 
+                  className="font-heading font-semibold leading-relaxed whitespace-pre-wrap" 
+                  style={{ color: textColor, fontFamily, fontSize: `${fontSize}px` }}
+                  dangerouslySetInnerHTML={{ __html: formatText(currentQuestion.text) }}
+                />
               </div>
               
               <div className="flex gap-4 justify-center">
@@ -955,9 +1056,11 @@ const Index = () => {
                   <Icon name="Check" size={32} style={{ color: primaryBtnColor }} />
                 </div>
               </div>
-              <p className={`text-xl md:text-2xl font-heading font-semibold whitespace-pre-wrap ${finalMessageAlign === 'left' ? 'text-left' : 'text-center'}`} style={{ color: textColor }}>
-                {finalMessage}
-              </p>
+              <p 
+                className={`font-heading font-semibold whitespace-pre-wrap ${finalMessageAlign === 'left' ? 'text-left' : 'text-center'}`} 
+                style={{ color: textColor, fontFamily, fontSize: `${fontSize}px` }}
+                dangerouslySetInnerHTML={{ __html: formatText(finalMessage) }}
+              />
               <div className="flex justify-center">
                 <Button onClick={handleRestart} variant="outline" size="lg" style={{ backgroundColor: secondaryBtnColor, color: textColor }}>
                   Пройти заново
