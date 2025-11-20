@@ -248,7 +248,7 @@ const Index = () => {
     toast.success('Опрос экспортирован');
   };
 
-  const handleExportHTML = (withSettings: boolean = false, largePadding: boolean = false) => {
+  const handleExportHTML = (withSettings: boolean = false) => {
     const htmlContent = `<!DOCTYPE html>
 <html lang="ru">
 <head>
@@ -268,10 +268,10 @@ const Index = () => {
             display: flex;
             align-items: center;
             justify-content: center;
-            padding: ${largePadding ? '80px 40px' : '20px'};
+            padding: 20px;
         }
         .container {
-            max-width: ${largePadding ? '1200px' : '800px'};
+            max-width: 800px;
             width: 100%;
         }
         .header {
@@ -289,7 +289,7 @@ const Index = () => {
         }
         .card {
             background: ${cardBgColor};
-            padding: ${largePadding ? '80px 100px' : '48px'};
+            padding: 48px;
             border-radius: 12px;
             box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
             animation: slideUp 0.6s ease-out;
@@ -567,6 +567,118 @@ const Index = () => {
             a.click();
         }
         
+        function exportSimpleHTML() {
+            const title = document.getElementById('survey-title-input').value;
+            const bg = document.getElementById('bg-color').value;
+            const card = document.getElementById('card-color').value;
+            const text = document.getElementById('text-color').value;
+            const font = document.getElementById('font-family').value;
+            const size = document.getElementById('font-size').value;
+            
+            const simpleHTML = \`<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Опрос</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: \${font}, -apple-system, sans-serif;
+            background: linear-gradient(135deg, #f8fafc 0%, \${bg} 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        .container { max-width: 800px; width: 100%; }
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 32px; animation: fadeIn 0.6s ease-out; }
+        h1 { font-size: 20px; font-weight: bold; color: \${text}; line-height: 1.4; }
+        .card { background: \${card}; padding: 48px; border-radius: 12px; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1); animation: slideUp 0.6s ease-out; }
+        .question-container { display: flex; flex-direction: column; gap: 32px; }
+        .question-text { font-size: \${size}px; font-weight: 600; color: \${text}; line-height: 1.6; white-space: pre-wrap; }
+        .text-left { text-align: left; }
+        .text-center { text-align: center; }
+        .buttons { display: flex; gap: 16px; justify-content: center; }
+        button { min-width: 128px; padding: 12px 24px; font-size: 18px; font-weight: 500; border-radius: 8px; border: none; cursor: pointer; transition: all 0.2s; }
+        .btn-primary { background: ${primaryBtnColor}; color: white; }
+        .btn-primary:hover { opacity: 0.9; transform: scale(1.05); }
+        .btn-secondary { background: ${secondaryBtnColor}; color: \${text}; border: 2px solid #e2e8f0; }
+        .btn-secondary:hover { background: #f8fafc; }
+        .final-message { display: flex; flex-direction: column; align-items: center; gap: 24px; animation: fadeIn 0.6s ease-out; }
+        .icon-check { width: 64px; height: 64px; border-radius: 50%; background: rgba(59, 130, 246, 0.1); display: flex; align-items: center; justify-content: center; font-size: 32px; color: ${primaryBtnColor}; }
+        .message-text { font-size: \${size}px; font-weight: 600; color: \${text}; line-height: 1.6; white-space: pre-wrap; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        @media (max-width: 768px) {
+            h1 { font-size: 16px; }
+            .card { padding: 32px 24px; }
+            .question-text { font-size: 24px; }
+            .message-text { font-size: 20px; }
+            .buttons { flex-direction: column; }
+            button { width: 100%; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header"><h1>\${title}</h1></div>
+        <div class="card"><div id="app"></div></div>
+    </div>
+    <script>
+        let questions = \${JSON.stringify(questions)};
+        let currentQuestionId = questions.length > 0 ? questions[0].id : null;
+        let finalMessage = '';
+        let finalMessageAlign = 'center';
+        
+        function render() {
+            const app = document.getElementById('app');
+            const currentQuestion = questions.find(q => q.id === currentQuestionId);
+            if (currentQuestion) {
+                const align = currentQuestion.textAlign || 'center';
+                const formattedText = currentQuestion.text.replace(/\\\\*\\\\*(.*?)\\\\*\\\\*/g, '<strong>$1</strong>').replace(/__(.*?)__/g, '<u>$1</u>').replace(/\\\\*(.*?)\\\\*/g, '<em>$1</em>');
+                if (!currentQuestion.yesNextId && !currentQuestion.noNextId) {
+                    app.innerHTML = '<div class="final-message"><div class="icon-check">✓</div><div class="text-' + align + '"><div class="message-text">' + formattedText + '</div></div><button class="btn-secondary" onclick="restart()">Пройти оценку заново</button></div>';
+                } else {
+                    app.innerHTML = '<div class="question-container"><div class="text-' + align + '"><div class="question-text">' + formattedText + '</div></div><div class="buttons"><button class="btn-primary" onclick="handleAnswer(\\'yes\\')">Да</button><button class="btn-secondary" onclick="handleAnswer(\\'no\\')">Нет</button></div></div>';
+                }
+            } else if (finalMessage) {
+                const formattedMessage = finalMessage.replace(/\\\\*\\\\*(.*?)\\\\*\\\\*/g, '<strong>$1</strong>').replace(/__(.*?)__/g, '<u>$1</u>').replace(/\\\\*(.*?)\\\\*/g, '<em>$1</em>');
+                app.innerHTML = '<div class="final-message"><div class="icon-check">✓</div><div class="text-' + finalMessageAlign + '"><div class="message-text">' + formattedMessage + '</div></div><button class="btn-secondary" onclick="restart()">Пройти оценку заново</button></div>';
+            } else {
+                app.innerHTML = '<div class="final-message"><div class="message-text">Вопросы не настроены</div></div>';
+            }
+        }
+        function handleAnswer(answer) {
+            const currentQuestion = questions.find(q => q.id === currentQuestionId);
+            if (!currentQuestion) return;
+            const nextId = answer === 'yes' ? currentQuestion.yesNextId : currentQuestion.noNextId;
+            const message = answer === 'yes' ? currentQuestion.yesMessage : currentQuestion.noMessage;
+            const messageAlign = answer === 'yes' ? currentQuestion.yesMessageAlign : currentQuestion.noMessageAlign;
+            if (nextId) { currentQuestionId = nextId; finalMessage = ''; }
+            else if (message) { finalMessage = message; finalMessageAlign = messageAlign || 'center'; currentQuestionId = null; }
+            else { currentQuestionId = null; }
+            render();
+        }
+        function restart() {
+            if (questions.length > 0) { currentQuestionId = questions[0].id; finalMessage = ''; render(); }
+        }
+        render();
+    </script>
+</body>
+</html>\`;
+            
+            const blob = new Blob([simpleHTML], {type: 'text/html'});
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'survey-simple-' + Date.now() + '.html';
+            a.click();
+            URL.revokeObjectURL(url);
+            alert('Простой HTML экспортирован!');
+        }
+        
         function applyTheme() {
             const title = document.getElementById('survey-title-input').value;
             const bg = document.getElementById('bg-color').value;
@@ -793,7 +905,8 @@ const Index = () => {
                     </div>
                 </div>
                 <button onclick="applyTheme()" style="width: 100%; padding: 8px 16px; background: #f59e0b; color: white; border: none; border-radius: 4px; cursor: pointer; margin-bottom: 8px;">Применить тему</button>
-                <button onclick="exportData()" style="width: 100%; padding: 8px 16px; background: #6366f1; color: white; border: none; border-radius: 4px; cursor: pointer;">Экспорт JSON</button>
+                <button onclick="exportData()" style="width: 100%; padding: 8px 16px; background: #6366f1; color: white; border: none; border-radius: 4px; cursor: pointer; margin-bottom: 8px;">Экспорт JSON</button>
+                <button onclick="exportSimpleHTML()" style="width: 100%; padding: 8px 16px; background: #10b981; color: white; border: none; border-radius: 4px; cursor: pointer;">Экспорт в простой HTML</button>
             </div>
         </div>`
     ) : htmlContent;
@@ -1298,7 +1411,7 @@ const Index = () => {
               <Button 
                 className="w-full justify-start" 
                 variant="outline"
-                onClick={() => handleExportHTML(false, false)}
+                onClick={() => handleExportHTML(false)}
               >
                 <Icon name="FileCode" size={16} className="mr-2" />
                 <div className="text-left">
@@ -1309,23 +1422,12 @@ const Index = () => {
               <Button 
                 className="w-full justify-start" 
                 variant="outline"
-                onClick={() => handleExportHTML(false, true)}
-              >
-                <Icon name="Maximize2" size={16} className="mr-2" />
-                <div className="text-left">
-                  <div className="font-semibold">Большой HTML</div>
-                  <div className="text-xs text-muted-foreground">Просмотр с увеличенными отступами</div>
-                </div>
-              </Button>
-              <Button 
-                className="w-full justify-start" 
-                variant="outline"
-                onClick={() => handleExportHTML(true, false)}
+                onClick={() => handleExportHTML(true)}
               >
                 <Icon name="Settings" size={16} className="mr-2" />
                 <div className="text-left">
                   <div className="font-semibold">HTML с редактором</div>
-                  <div className="text-xs text-muted-foreground">Можно редактировать вопросы</div>
+                  <div className="text-xs text-muted-foreground">Большой файл, можно редактировать вопросы</div>
                 </div>
               </Button>
             </div>
