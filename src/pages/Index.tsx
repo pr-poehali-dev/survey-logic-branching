@@ -44,8 +44,8 @@ const Index = () => {
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [editingQuestion, setEditingQuestion] = useState<Question | null>(null);
   const [newQuestionText, setNewQuestionText] = useState('');
-  const [newYesNextId, setNewYesNextId] = useState<string>('');
-  const [newNoNextId, setNewNoNextId] = useState<string>('');
+  const [newYesNextId, setNewYesNextId] = useState<string>('none');
+  const [newNoNextId, setNewNoNextId] = useState<string>('none');
   const [newYesMessage, setNewYesMessage] = useState('');
   const [newNoMessage, setNewNoMessage] = useState('');
 
@@ -103,8 +103,8 @@ const Index = () => {
           ? {
               ...q,
               text: newQuestionText,
-              yesNextId: newYesNextId || null,
-              noNextId: newNoNextId || null,
+              yesNextId: newYesNextId === 'none' ? null : newYesNextId,
+              noNextId: newNoNextId === 'none' ? null : newNoNextId,
               yesMessage: newYesMessage,
               noMessage: newNoMessage
             }
@@ -117,8 +117,8 @@ const Index = () => {
       const newQuestion: Question = {
         id: Date.now().toString(),
         text: newQuestionText,
-        yesNextId: newYesNextId || null,
-        noNextId: newNoNextId || null,
+        yesNextId: newYesNextId === 'none' ? null : newYesNextId,
+        noNextId: newNoNextId === 'none' ? null : newNoNextId,
         yesMessage: newYesMessage,
         noMessage: newNoMessage
       };
@@ -134,8 +134,8 @@ const Index = () => {
   const handleEditQuestion = (question: Question) => {
     setEditingQuestion(question);
     setNewQuestionText(question.text);
-    setNewYesNextId(question.yesNextId || '');
-    setNewNoNextId(question.noNextId || '');
+    setNewYesNextId(question.yesNextId || 'none');
+    setNewNoNextId(question.noNextId || 'none');
     setNewYesMessage(question.yesMessage || '');
     setNewNoMessage(question.noMessage || '');
   };
@@ -150,8 +150,8 @@ const Index = () => {
   const resetForm = () => {
     setEditingQuestion(null);
     setNewQuestionText('');
-    setNewYesNextId('');
-    setNewNoNextId('');
+    setNewYesNextId('none');
+    setNewNoNextId('none');
     setNewYesMessage('');
     setNewNoMessage('');
   };
@@ -197,7 +197,7 @@ const Index = () => {
                           <SelectValue placeholder="Выберите" />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="">Нет</SelectItem>
+                          <SelectItem value="none">Нет</SelectItem>
                           {questions.map(q => (
                             <SelectItem key={q.id} value={q.id}>
                               {q.text.substring(0, 30)}...
@@ -214,7 +214,7 @@ const Index = () => {
                           <SelectValue placeholder="Выберите" />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="">Нет</SelectItem>
+                          <SelectItem value="none">Нет</SelectItem>
                           {questions.map(q => (
                             <SelectItem key={q.id} value={q.id}>
                               {q.text.substring(0, 30)}...
