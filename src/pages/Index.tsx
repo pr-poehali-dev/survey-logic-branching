@@ -563,11 +563,11 @@ const Index = () => {
         function renderQuestionsList() {
             const list = document.getElementById('questions-list');
             list.innerHTML = '<h4>Все вопросы:</h4>' + questions.map((q, i) => 
-                \`<div style="padding: 10px; margin: 5px 0; border: 1px solid #e2e8f0; border-radius: 4px;">
-                    <strong>\${i + 1}.</strong> \${q.text.substring(0, 50)}...
-                    <button onclick="editQuestion('\${q.id}')" style="margin-left: 10px; padding: 4px 8px;">✏️</button>
-                    <button onclick="deleteQuestion('\${q.id}')" style="padding: 4px 8px; color: red;">🗑️</button>
-                </div>\`
+                '<div style="padding: 10px; margin: 5px 0; border: 1px solid #e2e8f0; border-radius: 4px;">' +
+                    '<strong>' + (i + 1) + '.</strong> ' + q.text.substring(0, 50) + '...' +
+                    '<button onclick="editQuestion(\\'' + q.id + '\\')" style="margin-left: 10px; padding: 4px 8px;">✏️</button>' +
+                    '<button onclick="deleteQuestion(\\'' + q.id + '\\')" style="padding: 4px 8px; color: red;">🗑️</button>' +
+                '</div>'
             ).join('');
         }
         
@@ -638,12 +638,12 @@ const Index = () => {
             const size = document.getElementById('font-size').value;
             
             document.getElementById('survey-title').textContent = title;
-            document.body.style.background = \`linear-gradient(135deg, #f8fafc 0%, \${bg} 100%)\`;
-            document.body.style.fontFamily = \`\${font}, -apple-system, sans-serif\`;
+            document.body.style.background = 'linear-gradient(135deg, #f8fafc 0%, ' + bg + ' 100%)';
+            document.body.style.fontFamily = font + ', -apple-system, sans-serif';
             document.querySelector('.card').style.background = card;
             document.querySelectorAll('.question-text, .message-text').forEach(el => {
                 el.style.color = text;
-                el.style.fontSize = \`\${size}px\`;
+                el.style.fontSize = size + 'px';
             });
             document.querySelector('h1').style.color = text;
             alert('Тема применена! Перезагрузите страницу, чтобы вернуться к исходной теме.');
