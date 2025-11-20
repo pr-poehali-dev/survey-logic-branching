@@ -419,32 +419,105 @@ const Index = () => {
         function renderQuestionsList() {
             const list = document.getElementById('questions-list');
             if (!list) return;
-            list.innerHTML = '<h4>Все вопросы:</h4>' + questions.map((q, i) => 
-                '<div style="padding: 10px; margin: 5px 0; border: 1px solid #e2e8f0; border-radius: 4px;">' +
-                    '<strong>' + (i + 1) + '.</strong> ' + q.text.substring(0, 50) + '...' +
-                    '<button onclick="editQuestion(\\'' + q.id + '\\')" style="margin-left: 10px; padding: 4px 8px;">✏️</button>' +
-                    '<button onclick="deleteQuestion(\\'' + q.id + '\\')" style="padding: 4px 8px; color: red;">🗑️</button>' +
+            
+            if (questions.length === 0) {
+                list.innerHTML = '<p style="color: #6b7280;">Нет вопросов. Добавьте первый вопрос.</p>';
+                return;
+            }
+            
+            list.innerHTML = questions.map((q, i) => 
+                '<div style="padding: 12px; margin: 8px 0; border: 1px solid #e2e8f0; border-radius: 4px; background: white;">' +
+                    '<div style="display: flex; justify-content: space-between; align-items: start;">' +
+                        '<div style="flex: 1;">' +
+                            '<strong>' + (i + 1) + '.</strong> ' + q.text.substring(0, 60) + (q.text.length > 60 ? '...' : '') +
+                            '<div style="font-size: 12px; color: #6b7280; margin-top: 4px;">' +
+                                'Да → ' + (q.yesNextId ? 'вопрос' : (q.yesMessage ? 'сообщение' : 'нет')) + ' | ' +
+                                'Нет → ' + (q.noNextId ? 'вопрос' : (q.noMessage ? 'сообщение' : 'нет')) +
+                            '</div>' +
+                        '</div>' +
+                        '<div style="display: flex; gap: 4px;">' +
+                            '<button onclick="editQuestion(\\'' + q.id + '\\')" style="padding: 6px 10px; background: #3b82f6; color: white; border: none; border-radius: 4px; cursor: pointer;">✏️</button>' +
+                            '<button onclick="deleteQuestion(\\'' + q.id + '\\')" style="padding: 6px 10px; background: #ef4444; color: white; border: none; border-radius: 4px; cursor: pointer;">🗑️</button>' +
+                        '</div>' +
+                    '</div>' +
                 '</div>'
             ).join('');
+            
+            updateQuestionSelects();
+        }
+        
+        function updateQuestionSelects() {
+            const yesNext = document.getElementById('yes-next');
+            const noNext = document.getElementById('no-next');
+            if (!yesNext || !noNext) return;
+            
+            const currentId = window.editingId;
+            const options = '<option value="none">Нет</option>' + 
+                questions.filter(q => q.id !== currentId).map(q => 
+                    '<option value="' + q.id + '">' + q.text.substring(0, 30) + '...</option>'
+                ).join('');
+            
+            yesNext.innerHTML = options;
+            noNext.innerHTML = options;
         }
         
         function editQuestion(id) {
             const q = questions.find(x => x.id === id);
             if (q) {
                 document.getElementById('edit-text').value = q.text;
+                document.getElementById('text-align').value = q.textAlign || 'center';
+                document.getElementById('yes-message').value = q.yesMessage || '';
+                document.getElementById('no-message').value = q.noMessage || '';
+                document.getElementById('yes-message-align').value = q.yesMessageAlign || 'center';
+                document.getElementById('no-message-align').value = q.noMessageAlign || 'center';
+                
                 window.editingId = id;
+                updateQuestionSelects();
+                
+                document.getElementById('yes-next').value = q.yesNextId || 'none';
+                document.getElementById('no-next').value = q.noNextId || 'none';
             }
+        }
+        
+        function cancelEdit() {
+            window.editingId = null;
+            document.getElementById('edit-text').value = '';
+            document.getElementById('text-align').value = 'center';
+            document.getElementById('yes-next').value = 'none';
+            document.getElementById('no-next').value = 'none';
+            document.getElementById('yes-message').value = '';
+            document.getElementById('no-message').value = '';
+            document.getElementById('yes-message-align').value = 'center';
+            document.getElementById('no-message-align').value = 'center';
         }
         
         function saveQuestion() {
             const text = document.getElementById('edit-text').value;
             if (!text.trim()) return alert('Введите текст вопроса');
             
+            const textAlign = document.getElementById('text-align').value;
+            const yesNextId = document.getElementById('yes-next').value;
+            const noNextId = document.getElementById('no-next').value;
+            const yesMessage = document.getElementById('yes-message').value;
+            const noMessage = document.getElementById('no-message').value;
+            const yesMessageAlign = document.getElementById('yes-message-align').value;
+            const noMessageAlign = document.getElementById('no-message-align').value;
+            
             if (window.editingId) {
-                questions = questions.map(q => q.id === window.editingId ? {...q, text} : q);
+                questions = questions.map(q => q.id === window.editingId ? {
+                    ...q,
+                    text: text,
+                    textAlign: textAlign,
+                    yesNextId: yesNextId === 'none' ? null : yesNextId,
+                    noNextId: noNextId === 'none' ? null : noNextId,
+                    yesMessage: yesMessage,
+                    noMessage: noMessage,
+                    yesMessageAlign: yesMessageAlign,
+                    noMessageAlign: noMessageAlign
+                } : q);
                 window.editingId = null;
             }
-            document.getElementById('edit-text').value = '';
+            cancelEdit();
             renderQuestionsList();
             render();
         }
@@ -453,18 +526,26 @@ const Index = () => {
             const text = document.getElementById('edit-text').value;
             if (!text.trim()) return alert('Введите текст вопроса');
             
+            const textAlign = document.getElementById('text-align').value;
+            const yesNextId = document.getElementById('yes-next').value;
+            const noNextId = document.getElementById('no-next').value;
+            const yesMessage = document.getElementById('yes-message').value;
+            const noMessage = document.getElementById('no-message').value;
+            const yesMessageAlign = document.getElementById('yes-message-align').value;
+            const noMessageAlign = document.getElementById('no-message-align').value;
+            
             questions.push({
                 id: Date.now().toString(),
-                text,
-                yesNextId: null,
-                noNextId: null,
-                yesMessage: '',
-                noMessage: '',
-                textAlign: 'center',
-                yesMessageAlign: 'center',
-                noMessageAlign: 'center'
+                text: text,
+                textAlign: textAlign,
+                yesNextId: yesNextId === 'none' ? null : yesNextId,
+                noNextId: noNextId === 'none' ? null : noNextId,
+                yesMessage: yesMessage,
+                noMessage: noMessage,
+                yesMessageAlign: yesMessageAlign,
+                noMessageAlign: noMessageAlign
             });
-            document.getElementById('edit-text').value = '';
+            cancelEdit();
             renderQuestionsList();
         }
         
@@ -606,49 +687,114 @@ const Index = () => {
             <h1 id="survey-title">${surveyTitle}</h1>
             <button class="btn-settings" onclick="toggleSettings()" style="padding: 8px 12px; background: rgba(255,255,255,0.9); border: 1px solid #e2e8f0; border-radius: 8px; cursor: pointer; font-size: 18px;">⚙️</button>
         </div>
-        <div id="settings" style="display:none; background: white; padding: 20px; border-radius: 8px; margin-bottom: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+        <div id="settings" style="display:none; background: white; padding: 20px; border-radius: 8px; margin-bottom: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); max-height: 80vh; overflow-y: auto;">
             <h3 style="margin-bottom: 15px;">Настройки опроса</h3>
-            <div style="margin-bottom: 10px;">
-                <label>Название опроса:</label>
-                <input type="text" id="survey-title-input" value="${surveyTitle}" style="width: 100%; padding: 8px; margin-top: 5px; border: 1px solid #e2e8f0; border-radius: 4px;">
-            </div>
-            <div style="margin-bottom: 10px;">
-                <label>Текст вопроса (используйте **жирный**, *курсив*, __подчеркнутый__):</label>
-                <textarea id="edit-text" style="width: 100%; padding: 8px; margin-top: 5px; border: 1px solid #e2e8f0; border-radius: 4px;" rows="3"></textarea>
-            </div>
-            <div style="margin-bottom: 10px; display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
-                <div>
-                    <label>Цвет фона:</label>
-                    <input type="color" id="bg-color" value="${bgColor}" style="width: 100%; height: 40px; margin-top: 5px;">
+            
+            <div style="margin-bottom: 20px; padding: 15px; background: #f8fafc; border-radius: 8px;">
+                <h4 style="margin-bottom: 10px;">Редактировать вопрос</h4>
+                <div style="margin-bottom: 10px;">
+                    <label style="display: block; margin-bottom: 5px; font-weight: 500;">Текст вопроса (используйте **жирный**, *курсив*, __подчеркнутый__):</label>
+                    <textarea id="edit-text" style="width: 100%; padding: 8px; border: 1px solid #e2e8f0; border-radius: 4px;" rows="3"></textarea>
                 </div>
-                <div>
-                    <label>Цвет карточки:</label>
-                    <input type="color" id="card-color" value="${cardBgColor}" style="width: 100%; height: 40px; margin-top: 5px;">
-                </div>
-                <div>
-                    <label>Цвет текста:</label>
-                    <input type="color" id="text-color" value="${textColor}" style="width: 100%; height: 40px; margin-top: 5px;">
-                </div>
-                <div>
-                    <label>Шрифт:</label>
-                    <select id="font-family" style="width: 100%; padding: 8px; margin-top: 5px; border: 1px solid #e2e8f0; border-radius: 4px;">
-                        <option value="system-ui">System UI</option>
-                        <option value="Arial">Arial</option>
-                        <option value="Georgia">Georgia</option>
-                        <option value="Times New Roman">Times New Roman</option>
-                        <option value="Courier New">Courier New</option>
+                
+                <div style="margin-bottom: 10px;">
+                    <label style="display: block; margin-bottom: 5px; font-weight: 500;">Выравнивание текста вопроса:</label>
+                    <select id="text-align" style="width: 100%; padding: 8px; border: 1px solid #e2e8f0; border-radius: 4px;">
+                        <option value="center">По центру</option>
+                        <option value="left">По левому краю</option>
                     </select>
                 </div>
-                <div>
-                    <label>Размер шрифта:</label>
-                    <input type="number" id="font-size" value="${fontSize}" min="16" max="48" style="width: 100%; padding: 8px; margin-top: 5px; border: 1px solid #e2e8f0; border-radius: 4px;">
+                
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px;">
+                    <div>
+                        <label style="display: block; margin-bottom: 5px; font-weight: 500;">Следующий вопрос (Да):</label>
+                        <select id="yes-next" style="width: 100%; padding: 8px; border: 1px solid #e2e8f0; border-radius: 4px;">
+                            <option value="none">Нет</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label style="display: block; margin-bottom: 5px; font-weight: 500;">Следующий вопрос (Нет):</label>
+                        <select id="no-next" style="width: 100%; padding: 8px; border: 1px solid #e2e8f0; border-radius: 4px;">
+                            <option value="none">Нет</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div style="margin-bottom: 10px;">
+                    <label style="display: block; margin-bottom: 5px; font-weight: 500;">Финальное сообщение (Да):</label>
+                    <textarea id="yes-message" style="width: 100%; padding: 8px; border: 1px solid #e2e8f0; border-radius: 4px;" rows="2"></textarea>
+                </div>
+                
+                <div style="margin-bottom: 10px;">
+                    <label style="display: block; margin-bottom: 5px; font-weight: 500;">Выравнивание сообщения (Да):</label>
+                    <select id="yes-message-align" style="width: 100%; padding: 8px; border: 1px solid #e2e8f0; border-radius: 4px;">
+                        <option value="center">По центру</option>
+                        <option value="left">По левому краю</option>
+                    </select>
+                </div>
+                
+                <div style="margin-bottom: 10px;">
+                    <label style="display: block; margin-bottom: 5px; font-weight: 500;">Финальное сообщение (Нет):</label>
+                    <textarea id="no-message" style="width: 100%; padding: 8px; border: 1px solid #e2e8f0; border-radius: 4px;" rows="2"></textarea>
+                </div>
+                
+                <div style="margin-bottom: 10px;">
+                    <label style="display: block; margin-bottom: 5px; font-weight: 500;">Выравнивание сообщения (Нет):</label>
+                    <select id="no-message-align" style="width: 100%; padding: 8px; border: 1px solid #e2e8f0; border-radius: 4px;">
+                        <option value="center">По центру</option>
+                        <option value="left">По левому краю</option>
+                    </select>
+                </div>
+                
+                <div style="display: flex; gap: 8px;">
+                    <button onclick="saveQuestion()" style="padding: 8px 16px; background: ${primaryBtnColor}; color: white; border: none; border-radius: 4px; cursor: pointer;">Сохранить вопрос</button>
+                    <button onclick="addQuestion()" style="padding: 8px 16px; background: #10b981; color: white; border: none; border-radius: 4px; cursor: pointer;">Добавить вопрос</button>
+                    <button onclick="cancelEdit()" style="padding: 8px 16px; background: #6b7280; color: white; border: none; border-radius: 4px; cursor: pointer;">Отмена</button>
                 </div>
             </div>
-            <button onclick="saveQuestion()" style="padding: 8px 16px; background: ${primaryBtnColor}; color: white; border: none; border-radius: 4px; cursor: pointer;">Сохранить вопрос</button>
-            <button onclick="addQuestion()" style="padding: 8px 16px; background: #10b981; color: white; border: none; border-radius: 4px; cursor: pointer; margin-left: 8px;">Добавить вопрос</button>
-            <button onclick="applyTheme()" style="padding: 8px 16px; background: #f59e0b; color: white; border: none; border-radius: 4px; cursor: pointer; margin-left: 8px;">Применить тему</button>
-            <button onclick="exportData()" style="padding: 8px 16px; background: #6366f1; color: white; border: none; border-radius: 4px; cursor: pointer; margin-left: 8px;">Экспорт JSON</button>
-            <div id="questions-list" style="margin-top: 20px;"></div>
+            
+            <div style="margin-bottom: 20px; padding: 15px; background: #f8fafc; border-radius: 8px;">
+                <h4 style="margin-bottom: 10px;">Все вопросы</h4>
+                <div id="questions-list"></div>
+            </div>
+            
+            <div style="margin-bottom: 20px; padding: 15px; background: #f8fafc; border-radius: 8px;">
+                <h4 style="margin-bottom: 10px;">Цветовая схема</h4>
+                <div style="margin-bottom: 10px;">
+                    <label style="display: block; margin-bottom: 5px; font-weight: 500;">Название опроса:</label>
+                    <input type="text" id="survey-title-input" value="${surveyTitle}" style="width: 100%; padding: 8px; border: 1px solid #e2e8f0; border-radius: 4px;">
+                </div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px;">
+                    <div>
+                        <label style="display: block; margin-bottom: 5px; font-weight: 500;">Цвет фона:</label>
+                        <input type="color" id="bg-color" value="${bgColor}" style="width: 100%; height: 40px;">
+                    </div>
+                    <div>
+                        <label style="display: block; margin-bottom: 5px; font-weight: 500;">Цвет карточки:</label>
+                        <input type="color" id="card-color" value="${cardBgColor}" style="width: 100%; height: 40px;">
+                    </div>
+                    <div>
+                        <label style="display: block; margin-bottom: 5px; font-weight: 500;">Цвет текста:</label>
+                        <input type="color" id="text-color" value="${textColor}" style="width: 100%; height: 40px;">
+                    </div>
+                    <div>
+                        <label style="display: block; margin-bottom: 5px; font-weight: 500;">Шрифт:</label>
+                        <select id="font-family" style="width: 100%; padding: 8px; border: 1px solid #e2e8f0; border-radius: 4px;">
+                            <option value="system-ui">System UI</option>
+                            <option value="Arial">Arial</option>
+                            <option value="Georgia">Georgia</option>
+                            <option value="Times New Roman">Times New Roman</option>
+                            <option value="Courier New">Courier New</option>
+                        </select>
+                    </div>
+                    <div style="grid-column: span 2;">
+                        <label style="display: block; margin-bottom: 5px; font-weight: 500;">Размер шрифта:</label>
+                        <input type="number" id="font-size" value="${fontSize}" min="16" max="48" style="width: 100%; padding: 8px; border: 1px solid #e2e8f0; border-radius: 4px;">
+                    </div>
+                </div>
+                <button onclick="applyTheme()" style="width: 100%; padding: 8px 16px; background: #f59e0b; color: white; border: none; border-radius: 4px; cursor: pointer; margin-bottom: 8px;">Применить тему</button>
+                <button onclick="exportData()" style="width: 100%; padding: 8px 16px; background: #6366f1; color: white; border: none; border-radius: 4px; cursor: pointer;">Экспорт JSON</button>
+            </div>
         </div>`
     ) : htmlContent;
 
