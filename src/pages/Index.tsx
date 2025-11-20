@@ -665,7 +665,7 @@ const Index = () => {
     >
       <div className="w-full max-w-2xl">
         <div className="flex justify-between items-center mb-8 animate-fade-in">
-          <h1 className="text-4xl font-heading font-bold" style={{ color: textColor }}>Оценка возможности постановки на учет граждан в качестве нуждающихся в жилых помещениях, предоставляемых 
+          <h1 className="font-heading font-bold text-2xl" style={{ color: textColor }}>Оценка возможности постановки на учет граждан в качестве нуждающихся в жилых помещениях, предоставляемых 
 по договорам социального найма (жилищный учет)</h1>
           <Sheet open={isSettingsOpen} onOpenChange={setIsSettingsOpen}>
             <SheetTrigger asChild>
