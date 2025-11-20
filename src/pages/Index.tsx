@@ -248,7 +248,7 @@ const Index = () => {
     toast.success('Опрос экспортирован');
   };
 
-  const handleExportHTML = (withSettings: boolean = false) => {
+  const handleExportHTML = (withSettings: boolean = false, largePadding: boolean = false) => {
     const htmlContent = `<!DOCTYPE html>
 <html lang="ru">
 <head>
@@ -268,10 +268,10 @@ const Index = () => {
             display: flex;
             align-items: center;
             justify-content: center;
-            padding: 20px;
+            padding: ${largePadding ? '80px 40px' : '20px'};
         }
         .container {
-            max-width: 800px;
+            max-width: ${largePadding ? '1200px' : '800px'};
             width: 100%;
         }
         .header {
@@ -289,7 +289,7 @@ const Index = () => {
         }
         .card {
             background: ${cardBgColor};
-            padding: 48px;
+            padding: ${largePadding ? '80px 100px' : '48px'};
             border-radius: 12px;
             box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
             animation: slideUp 0.6s ease-out;
@@ -1298,7 +1298,7 @@ const Index = () => {
               <Button 
                 className="w-full justify-start" 
                 variant="outline"
-                onClick={() => handleExportHTML(false)}
+                onClick={() => handleExportHTML(false, false)}
               >
                 <Icon name="FileCode" size={16} className="mr-2" />
                 <div className="text-left">
@@ -1309,12 +1309,23 @@ const Index = () => {
               <Button 
                 className="w-full justify-start" 
                 variant="outline"
-                onClick={() => handleExportHTML(true)}
+                onClick={() => handleExportHTML(false, true)}
+              >
+                <Icon name="Maximize2" size={16} className="mr-2" />
+                <div className="text-left">
+                  <div className="font-semibold">Большой HTML</div>
+                  <div className="text-xs text-muted-foreground">Просмотр с увеличенными отступами</div>
+                </div>
+              </Button>
+              <Button 
+                className="w-full justify-start" 
+                variant="outline"
+                onClick={() => handleExportHTML(true, false)}
               >
                 <Icon name="Settings" size={16} className="mr-2" />
                 <div className="text-left">
                   <div className="font-semibold">HTML с редактором</div>
-                  <div className="text-xs text-muted-foreground">Большой файл, можно редактировать вопросы</div>
+                  <div className="text-xs text-muted-foreground">Можно редактировать вопросы</div>
                 </div>
               </Button>
             </div>
