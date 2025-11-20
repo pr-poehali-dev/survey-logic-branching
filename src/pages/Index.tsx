@@ -407,6 +407,104 @@ const Index = () => {
         let currentQuestionId = questions.length > 0 ? questions[0].id : null;
         let finalMessage = '';
         let finalMessageAlign = 'center';
+        
+        function toggleSettings() {
+            const settings = document.getElementById('settings');
+            if (settings) {
+                settings.style.display = settings.style.display === 'none' ? 'block' : 'none';
+                if (settings.style.display === 'block') renderQuestionsList();
+            }
+        }
+        
+        function renderQuestionsList() {
+            const list = document.getElementById('questions-list');
+            if (!list) return;
+            list.innerHTML = '<h4>Все вопросы:</h4>' + questions.map((q, i) => 
+                '<div style="padding: 10px; margin: 5px 0; border: 1px solid #e2e8f0; border-radius: 4px;">' +
+                    '<strong>' + (i + 1) + '.</strong> ' + q.text.substring(0, 50) + '...' +
+                    '<button onclick="editQuestion(\\'' + q.id + '\\')" style="margin-left: 10px; padding: 4px 8px;">✏️</button>' +
+                    '<button onclick="deleteQuestion(\\'' + q.id + '\\')" style="padding: 4px 8px; color: red;">🗑️</button>' +
+                '</div>'
+            ).join('');
+        }
+        
+        function editQuestion(id) {
+            const q = questions.find(x => x.id === id);
+            if (q) {
+                document.getElementById('edit-text').value = q.text;
+                window.editingId = id;
+            }
+        }
+        
+        function saveQuestion() {
+            const text = document.getElementById('edit-text').value;
+            if (!text.trim()) return alert('Введите текст вопроса');
+            
+            if (window.editingId) {
+                questions = questions.map(q => q.id === window.editingId ? {...q, text} : q);
+                window.editingId = null;
+            }
+            document.getElementById('edit-text').value = '';
+            renderQuestionsList();
+            render();
+        }
+        
+        function addQuestion() {
+            const text = document.getElementById('edit-text').value;
+            if (!text.trim()) return alert('Введите текст вопроса');
+            
+            questions.push({
+                id: Date.now().toString(),
+                text,
+                yesNextId: null,
+                noNextId: null,
+                yesMessage: '',
+                noMessage: '',
+                textAlign: 'center',
+                yesMessageAlign: 'center',
+                noMessageAlign: 'center'
+            });
+            document.getElementById('edit-text').value = '';
+            renderQuestionsList();
+        }
+        
+        function deleteQuestion(id) {
+            if (confirm('Удалить вопрос?')) {
+                questions = questions.filter(q => q.id !== id);
+                renderQuestionsList();
+                if (currentQuestionId === id) restart();
+            }
+        }
+        
+        function exportData() {
+            const data = JSON.stringify(questions, null, 2);
+            const blob = new Blob([data], {type: 'application/json'});
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'questions.json';
+            a.click();
+        }
+        
+        function applyTheme() {
+            const title = document.getElementById('survey-title-input').value;
+            const bg = document.getElementById('bg-color').value;
+            const card = document.getElementById('card-color').value;
+            const text = document.getElementById('text-color').value;
+            const font = document.getElementById('font-family').value;
+            const size = document.getElementById('font-size').value;
+            
+            document.getElementById('survey-title').textContent = title;
+            document.body.style.background = 'linear-gradient(135deg, #f8fafc 0%, ' + bg + ' 100%)';
+            document.body.style.fontFamily = font + ', -apple-system, sans-serif';
+            document.querySelector('.card').style.background = card;
+            document.querySelectorAll('.question-text, .message-text').forEach(el => {
+                el.style.color = text;
+                el.style.fontSize = size + 'px';
+            });
+            document.querySelector('h1').style.color = text;
+            alert('Тема применена! Перезагрузите страницу, чтобы вернуться к исходной теме.');
+        }
 
         function render() {
             const app = document.getElementById('app');
@@ -552,104 +650,6 @@ const Index = () => {
             <button onclick="exportData()" style="padding: 8px 16px; background: #6366f1; color: white; border: none; border-radius: 4px; cursor: pointer; margin-left: 8px;">Экспорт JSON</button>
             <div id="questions-list" style="margin-top: 20px;"></div>
         </div>`
-    ).replace(
-      'render();',
-      `function toggleSettings() {
-            const settings = document.getElementById('settings');
-            settings.style.display = settings.style.display === 'none' ? 'block' : 'none';
-            if (settings.style.display === 'block') renderQuestionsList();
-        }
-        
-        function renderQuestionsList() {
-            const list = document.getElementById('questions-list');
-            list.innerHTML = '<h4>Все вопросы:</h4>' + questions.map((q, i) => 
-                '<div style="padding: 10px; margin: 5px 0; border: 1px solid #e2e8f0; border-radius: 4px;">' +
-                    '<strong>' + (i + 1) + '.</strong> ' + q.text.substring(0, 50) + '...' +
-                    '<button onclick="editQuestion(\\'' + q.id + '\\')" style="margin-left: 10px; padding: 4px 8px;">✏️</button>' +
-                    '<button onclick="deleteQuestion(\\'' + q.id + '\\')" style="padding: 4px 8px; color: red;">🗑️</button>' +
-                '</div>'
-            ).join('');
-        }
-        
-        function editQuestion(id) {
-            const q = questions.find(x => x.id === id);
-            if (q) {
-                document.getElementById('edit-text').value = q.text;
-                window.editingId = id;
-            }
-        }
-        
-        function saveQuestion() {
-            const text = document.getElementById('edit-text').value;
-            if (!text.trim()) return alert('Введите текст вопроса');
-            
-            if (window.editingId) {
-                questions = questions.map(q => q.id === window.editingId ? {...q, text} : q);
-                window.editingId = null;
-            }
-            document.getElementById('edit-text').value = '';
-            renderQuestionsList();
-            render();
-        }
-        
-        function addQuestion() {
-            const text = document.getElementById('edit-text').value;
-            if (!text.trim()) return alert('Введите текст вопроса');
-            
-            questions.push({
-                id: Date.now().toString(),
-                text,
-                yesNextId: null,
-                noNextId: null,
-                yesMessage: '',
-                noMessage: '',
-                textAlign: 'center',
-                yesMessageAlign: 'center',
-                noMessageAlign: 'center'
-            });
-            document.getElementById('edit-text').value = '';
-            renderQuestionsList();
-        }
-        
-        function deleteQuestion(id) {
-            if (confirm('Удалить вопрос?')) {
-                questions = questions.filter(q => q.id !== id);
-                renderQuestionsList();
-                if (currentQuestionId === id) restart();
-            }
-        }
-        
-        function exportData() {
-            const data = JSON.stringify(questions, null, 2);
-            const blob = new Blob([data], {type: 'application/json'});
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = 'questions.json';
-            a.click();
-        }
-        
-        function applyTheme() {
-            const title = document.getElementById('survey-title-input').value;
-            const bg = document.getElementById('bg-color').value;
-            const card = document.getElementById('card-color').value;
-            const text = document.getElementById('text-color').value;
-            const font = document.getElementById('font-family').value;
-            const size = document.getElementById('font-size').value;
-            
-            document.getElementById('survey-title').textContent = title;
-            document.body.style.background = 'linear-gradient(135deg, #f8fafc 0%, ' + bg + ' 100%)';
-            document.body.style.fontFamily = font + ', -apple-system, sans-serif';
-            document.querySelector('.card').style.background = card;
-            document.querySelectorAll('.question-text, .message-text').forEach(el => {
-                el.style.color = text;
-                el.style.fontSize = size + 'px';
-            });
-            document.querySelector('h1').style.color = text;
-            alert('Тема применена! Перезагрузите страницу, чтобы вернуться к исходной теме.');
-        }
-        
-        render();`
     ) : htmlContent;
 
     const blob = new Blob([htmlWithSettings], { type: 'text/html' });
