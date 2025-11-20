@@ -16,6 +16,9 @@ interface Question {
   noNextId: string | null;
   yesMessage?: string;
   noMessage?: string;
+  textAlign?: 'left' | 'center';
+  yesMessageAlign?: 'left' | 'center';
+  noMessageAlign?: 'left' | 'center';
 }
 
 const defaultQuestions: Question[] = [
@@ -25,7 +28,10 @@ const defaultQuestions: Question[] = [
     yesNextId: '2',
     noNextId: null,
     yesMessage: '',
-    noMessage: 'Попробуйте начать с простых задач!'
+    noMessage: 'Попробуйте начать с простых задач!',
+    textAlign: 'center',
+    yesMessageAlign: 'center',
+    noMessageAlign: 'center'
   },
   {
     id: '2',
@@ -33,7 +39,10 @@ const defaultQuestions: Question[] = [
     yesNextId: null,
     noNextId: null,
     yesMessage: 'Отлично! Вы готовы к разработке.',
-    noMessage: 'Рекомендуем изучить основы JS.'
+    noMessage: 'Рекомендуем изучить основы JS.',
+    textAlign: 'center',
+    yesMessageAlign: 'center',
+    noMessageAlign: 'center'
   }
 ];
 
@@ -41,6 +50,7 @@ const Index = () => {
   const [questions, setQuestions] = useState<Question[]>([]);
   const [currentQuestionId, setCurrentQuestionId] = useState<string | null>(null);
   const [finalMessage, setFinalMessage] = useState<string>('');
+  const [finalMessageAlign, setFinalMessageAlign] = useState<'left' | 'center'>('center');
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [editingQuestion, setEditingQuestion] = useState<Question | null>(null);
   const [newQuestionText, setNewQuestionText] = useState('');
@@ -48,6 +58,9 @@ const Index = () => {
   const [newNoNextId, setNewNoNextId] = useState<string>('none');
   const [newYesMessage, setNewYesMessage] = useState('');
   const [newNoMessage, setNewNoMessage] = useState('');
+  const [newTextAlign, setNewTextAlign] = useState<'left' | 'center'>('center');
+  const [newYesMessageAlign, setNewYesMessageAlign] = useState<'left' | 'center'>('center');
+  const [newNoMessageAlign, setNewNoMessageAlign] = useState<'left' | 'center'>('center');
 
   useEffect(() => {
     const saved = localStorage.getItem('surveyQuestions');
@@ -71,12 +84,14 @@ const Index = () => {
 
     const nextId = answer === 'yes' ? currentQuestion.yesNextId : currentQuestion.noNextId;
     const message = answer === 'yes' ? currentQuestion.yesMessage : currentQuestion.noMessage;
+    const messageAlign = answer === 'yes' ? currentQuestion.yesMessageAlign : currentQuestion.noMessageAlign;
 
     if (nextId) {
       setCurrentQuestionId(nextId);
       setFinalMessage('');
     } else if (message) {
       setFinalMessage(message);
+      setFinalMessageAlign(messageAlign || 'center');
       setCurrentQuestionId(null);
     } else {
       setFinalMessage('Спасибо за прохождение опроса!');
@@ -106,7 +121,10 @@ const Index = () => {
               yesNextId: newYesNextId === 'none' ? null : newYesNextId,
               noNextId: newNoNextId === 'none' ? null : newNoNextId,
               yesMessage: newYesMessage,
-              noMessage: newNoMessage
+              noMessage: newNoMessage,
+              textAlign: newTextAlign,
+              yesMessageAlign: newYesMessageAlign,
+              noMessageAlign: newNoMessageAlign
             }
           : q
       );
@@ -124,7 +142,10 @@ const Index = () => {
         yesNextId: newYesNextId === 'none' ? null : newYesNextId,
         noNextId: newNoNextId === 'none' ? null : newNoNextId,
         yesMessage: newYesMessage,
-        noMessage: newNoMessage
+        noMessage: newNoMessage,
+        textAlign: newTextAlign,
+        yesMessageAlign: newYesMessageAlign,
+        noMessageAlign: newNoMessageAlign
       };
       const updated = [...questions, newQuestion];
       setQuestions(updated);
@@ -142,6 +163,9 @@ const Index = () => {
     setNewNoNextId(question.noNextId || 'none');
     setNewYesMessage(question.yesMessage || '');
     setNewNoMessage(question.noMessage || '');
+    setNewTextAlign(question.textAlign || 'center');
+    setNewYesMessageAlign(question.yesMessageAlign || 'center');
+    setNewNoMessageAlign(question.noMessageAlign || 'center');
   };
 
   const handleDeleteQuestion = (id: string) => {
@@ -158,6 +182,9 @@ const Index = () => {
     setNewNoNextId('none');
     setNewYesMessage('');
     setNewNoMessage('');
+    setNewTextAlign('center');
+    setNewYesMessageAlign('center');
+    setNewNoMessageAlign('center');
   };
 
   const handleResetToDefault = () => {
@@ -237,6 +264,19 @@ const Index = () => {
                     />
                   </div>
 
+                  <div className="space-y-2">
+                    <Label htmlFor="text-align">Выравнивание текста вопроса</Label>
+                    <Select value={newTextAlign} onValueChange={(value: 'left' | 'center') => setNewTextAlign(value)}>
+                      <SelectTrigger id="text-align">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="center">По центру</SelectItem>
+                        <SelectItem value="left">По левому краю</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
                       <Label htmlFor="yes-next">Следующий вопрос (Да)</Label>
@@ -285,6 +325,19 @@ const Index = () => {
                   </div>
 
                   <div className="space-y-2">
+                    <Label htmlFor="yes-message-align">Выравнивание сообщения (Да)</Label>
+                    <Select value={newYesMessageAlign} onValueChange={(value: 'left' | 'center') => setNewYesMessageAlign(value)}>
+                      <SelectTrigger id="yes-message-align">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="center">По центру</SelectItem>
+                        <SelectItem value="left">По левому краю</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="space-y-2">
                     <Label htmlFor="no-message">Финальное сообщение (Нет)</Label>
                     <Textarea
                       id="no-message"
@@ -293,6 +346,19 @@ const Index = () => {
                       placeholder="Сообщение при ответе 'Нет'"
                       rows={3}
                     />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="no-message-align">Выравнивание сообщения (Нет)</Label>
+                    <Select value={newNoMessageAlign} onValueChange={(value: 'left' | 'center') => setNewNoMessageAlign(value)}>
+                      <SelectTrigger id="no-message-align">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="center">По центру</SelectItem>
+                        <SelectItem value="left">По левому краю</SelectItem>
+                      </SelectContent>
+                    </Select>
                   </div>
 
                   <div className="flex gap-2">
@@ -385,7 +451,7 @@ const Index = () => {
         <Card className="p-8 md:p-12 shadow-xl animate-slide-up">
           {currentQuestion ? (
             <div className="space-y-8">
-              <div className="text-center">
+              <div className={currentQuestion.textAlign === 'left' ? 'text-left' : 'text-center'}>
                 <h2 className="text-2xl md:text-3xl font-heading font-semibold text-foreground leading-relaxed whitespace-pre-wrap">
                   {currentQuestion.text}
                 </h2>
@@ -410,13 +476,13 @@ const Index = () => {
               </div>
             </div>
           ) : finalMessage ? (
-            <div className="space-y-6 text-center animate-fade-in">
+            <div className="space-y-6 animate-fade-in">
               <div className="flex justify-center">
                 <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center">
                   <Icon name="Check" size={32} className="text-primary" />
                 </div>
               </div>
-              <p className="text-xl md:text-2xl font-heading font-semibold text-foreground whitespace-pre-wrap">
+              <p className={`text-xl md:text-2xl font-heading font-semibold text-foreground whitespace-pre-wrap ${finalMessageAlign === 'left' ? 'text-left' : 'text-center'}`}>
                 {finalMessage}
               </p>
               <Button onClick={handleRestart} variant="outline" size="lg">
