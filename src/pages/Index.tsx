@@ -170,6 +170,40 @@ const Index = () => {
     }
   };
 
+  const handleExportQuestions = () => {
+    const dataStr = JSON.stringify(questions, null, 2);
+    const dataBlob = new Blob([dataStr], { type: 'application/json' });
+    const url = URL.createObjectURL(dataBlob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `survey-questions-${Date.now()}.json`;
+    link.click();
+    URL.revokeObjectURL(url);
+    toast.success('Опрос экспортирован');
+  };
+
+  const handleImportQuestions = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      try {
+        const imported = JSON.parse(e.target?.result as string);
+        setQuestions(imported);
+        localStorage.setItem('surveyQuestions', JSON.stringify(imported));
+        if (imported.length > 0) {
+          setCurrentQuestionId(imported[0].id);
+          setFinalMessage('');
+        }
+        toast.success('Опрос импортирован');
+      } catch (error) {
+        toast.error('Ошибка импорта файла');
+      }
+    };
+    reader.readAsText(file);
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 flex items-center justify-center p-4">
       <div className="w-full max-w-2xl">
@@ -241,21 +275,23 @@ const Index = () => {
 
                   <div className="space-y-2">
                     <Label htmlFor="yes-message">Финальное сообщение (Да)</Label>
-                    <Input
+                    <Textarea
                       id="yes-message"
                       value={newYesMessage}
                       onChange={(e) => setNewYesMessage(e.target.value)}
                       placeholder="Сообщение при ответе 'Да'"
+                      rows={3}
                     />
                   </div>
 
                   <div className="space-y-2">
                     <Label htmlFor="no-message">Финальное сообщение (Нет)</Label>
-                    <Input
+                    <Textarea
                       id="no-message"
                       value={newNoMessage}
                       onChange={(e) => setNewNoMessage(e.target.value)}
                       placeholder="Сообщение при ответе 'Нет'"
+                      rows={3}
                     />
                   </div>
 
@@ -306,7 +342,32 @@ const Index = () => {
                   </div>
                 </div>
 
-                <div className="border-t pt-4">
+                <div className="border-t pt-4 space-y-3">
+                  <div className="grid grid-cols-2 gap-2">
+                    <Button 
+                      variant="outline" 
+                      className="w-full"
+                      onClick={handleExportQuestions}
+                    >
+                      <Icon name="Download" size={16} className="mr-2" />
+                      Экспорт
+                    </Button>
+                    <Button 
+                      variant="outline" 
+                      className="w-full"
+                      onClick={() => document.getElementById('import-file')?.click()}
+                    >
+                      <Icon name="Upload" size={16} className="mr-2" />
+                      Импорт
+                    </Button>
+                    <input
+                      id="import-file"
+                      type="file"
+                      accept=".json"
+                      className="hidden"
+                      onChange={handleImportQuestions}
+                    />
+                  </div>
                   <Button 
                     variant="destructive" 
                     className="w-full"
@@ -325,7 +386,7 @@ const Index = () => {
           {currentQuestion ? (
             <div className="space-y-8">
               <div className="text-center">
-                <h2 className="text-2xl md:text-3xl font-heading font-semibold text-foreground leading-relaxed">
+                <h2 className="text-2xl md:text-3xl font-heading font-semibold text-foreground leading-relaxed whitespace-pre-wrap">
                   {currentQuestion.text}
                 </h2>
               </div>
@@ -355,7 +416,7 @@ const Index = () => {
                   <Icon name="Check" size={32} className="text-primary" />
                 </div>
               </div>
-              <p className="text-xl md:text-2xl font-heading font-semibold text-foreground">
+              <p className="text-xl md:text-2xl font-heading font-semibold text-foreground whitespace-pre-wrap">
                 {finalMessage}
               </p>
               <Button onClick={handleRestart} variant="outline" size="lg">
