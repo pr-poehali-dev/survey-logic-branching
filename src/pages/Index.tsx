@@ -690,7 +690,7 @@ const Index = () => {
     >
       <div className="w-full max-w-2xl">
         <div className="flex justify-between items-center mb-8 animate-fade-in">
-          <h1 className="font-heading font-bold text-xl" style={{ color: textColor }}>
+          <h1 className="font-heading font-bold text-2xl" style={{ color: textColor }}>
             {surveyTitle}
           </h1>
           <Sheet open={isSettingsOpen} onOpenChange={setIsSettingsOpen}>
